@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace acquizapi
 {
@@ -69,6 +70,25 @@ namespace acquizapi
                 .AllowAnyMethod()
                 .AllowCredentials()
                 );
+
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
+            {
+#if DEBUG
+                Authority = "http://localhost:41016",
+#else
+#if USINGAZURE
+                Authority = "http://acidserver.azurewebsites.net",
+#else
+                Authority = "http://118.178.58.187:5100/",
+#endif
+#endif
+                RequireHttpsMetadata = false,
+
+                AllowedScopes = { "api.acquiz" },
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true
+            });
 
             app.UseMvc();
         }
