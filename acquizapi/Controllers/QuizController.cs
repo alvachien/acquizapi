@@ -129,7 +129,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                queryString = @"INSERT INTO [dbo].[quiz] ([quiztype],[attenduser],[submitdate]) VALUES (@quiztype, @attenduser, @submitdate); SELECT @Identity = SCOPE_IDENTITY();";
+                queryString = @"INSERT INTO [dbo].[quiz] ([quiztype],[basicinfo],[attenduser],[submitdate]) VALUES (@quiztype, @basicinfo, @attenduser, @submitdate); SELECT @Identity = SCOPE_IDENTITY();";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@quiztype", qz.QuizType);

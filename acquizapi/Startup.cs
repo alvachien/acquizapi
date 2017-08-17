@@ -1,4 +1,11 @@
-﻿using System;
+﻿
+//#define USE_MICROSOFTAZURE
+#define USE_ALIYUN
+#if RELEASE
+#undef DEBUG
+#endif
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,19 +59,16 @@ namespace acquizapi
                     "http://localhost:20000", // AC math exercies
                     "https://localhost:20000"
                     )
-#else
-#if USINGAZURE
+#elif USE_MICROSOFTAZURE
                 builder.WithOrigins(
                     "http://acmathexercise.azurewebsites.net",
                     "https://acmathexercise.azurewebsites.net"
                     )
-#else
-                    // Todo!
+#elif USE_ALIYUN
                 builder.WithOrigins(
-                    "http://118.178.58.187:5220",
-                    "https://118.178.58.187:5220"
+                    "http://118.178.58.187:5230",
+                    "https://118.178.58.187:5230"
                     )
-#endif
 #endif
                 .AllowAnyHeader()
                 .AllowAnyMethod()
@@ -76,12 +80,10 @@ namespace acquizapi
             {
 #if DEBUG
                 Authority = "http://localhost:41016",
-#else
-#if USINGAZURE
+#elif USE_MICROSOFTAZURE
                 Authority = "http://acidserver.azurewebsites.net",
-#else
-                Authority = "http://118.178.58.187:5100/",
-#endif
+#elif USE_ALIYUN
+                Authority = "http://118.178.58.187:5100",
 #endif
                 RequireHttpsMetadata = false,
 
