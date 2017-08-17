@@ -17,18 +17,25 @@ namespace acquizapi.Controllers
     public class QuizFailureController : Controller
     {
         // GET: api/QuizFailure
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        [HttpGet("{usr}")]
+        public async Task<IActionResult> Get(String usr)
         {
             List<QuizFailureRetry> listRst = new List<QuizFailureRetry>();
             Boolean bError = false;
             String strErrMsg = "";
 
             // Get user name
-            var usr = User.FindFirst(c => c.Type == "sub");
             String usrName = String.Empty;
-            if (usr != null)
-                usrName = usr.Value;
+            if (String.IsNullOrEmpty(usr))
+            {
+                var usro = User.FindFirst(c => c.Type == "sub");
+                if (usr != null)
+                    usrName = usro.Value;
+            }
+            else
+            {
+                usrName = usr;
+            }
 
             SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
