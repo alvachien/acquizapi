@@ -36,6 +36,8 @@ namespace acquizapi.Models
         public Int32 QuizID { get; set; }
         public Int16 QuizType { get; set; }
         [StringLength(50)]
+        public String BasicInfo { get; set; }
+        [StringLength(50)]
         public String AttendUser { get; set; }
         public DateTime SubmitDate { get; set; }
 

@@ -131,6 +131,7 @@ GO
 CREATE TABLE [dbo].[quiz](
 	[quizid] [int] IDENTITY(1,1) NOT NULL,
 	[quiztype] [smallint] NOT NULL,
+	[basicinfo] [nvarhcar] (50) NOT NULL,
 	[attenduser] [nvarchar](50) NOT NULL,
 	[submitdate] [datetime] NOT NULL,
  CONSTRAINT [PK_quiz] PRIMARY KEY CLUSTERED 

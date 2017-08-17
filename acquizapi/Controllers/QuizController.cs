@@ -28,7 +28,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [quizid],[quiztype],[attenduser],[submitdate] FROM [dbo].[quiz] ORDER BY [quizid] ASC;
+                String queryString = @"SELECT [quizid],[quiztype],[basicinfo],[attenduser],[submitdate] FROM [dbo].[quiz] ORDER BY [quizid] ASC;
                                 SELECT [quizid],[failidx],[expected],[inputted] FROM [dbo].[quizfaillog] ORDER BY [quizid] ASC;
                                 SELECT [quizid],[section],[timespent],[totalitems],[faileditems] FROM [dbo].[quizsection] ORDER BY [quizid] ASC;";
 
@@ -70,7 +70,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [quizid],[quiztype],[attenduser],[submitdate] FROM [dbo].[quiz] WHERE [quizid] = @qid;
+                String queryString = @"SELECT [quizid],[quiztype],[basicinfo],[attenduser],[submitdate] FROM [dbo].[quiz] WHERE [quizid] = @qid;
                                 SELECT [quizid],[failidx],[expected],[inputted] FROM [dbo].[quizfaillog] WHERE [quizid] = @qid;
                                 SELECT [quizid],[section],[timespent],[totalitems],[faileditems] FROM [dbo].[quizsection] WHERE [quizid] = @qid;";
 
@@ -133,6 +133,7 @@ namespace acquizapi.Controllers
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@quiztype", qz.QuizType);
+                cmd.Parameters.AddWithValue("@basicinfo", qz.BasicInfo);
                 cmd.Parameters.AddWithValue("@attenduser", usrName);
                 cmd.Parameters.AddWithValue("@submitdate", qz.SubmitDate);
                 SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
@@ -232,8 +233,12 @@ namespace acquizapi.Controllers
                         Quiz qz = new Quiz();
                         qz.QuizID = reader.GetInt32(0);
                         qz.QuizType = reader.GetInt16(1);
-                        qz.AttendUser = reader.GetString(2);
-                        qz.SubmitDate = reader.GetDateTime(3);
+                        if (!reader.IsDBNull(2))
+                        {
+                            qz.BasicInfo = reader.GetString(2);
+                        }                        
+                        qz.AttendUser = reader.GetString(3);
+                        qz.SubmitDate = reader.GetDateTime(4);
                         listRst.Add(qz);
                     }
                 }
