@@ -88,3 +88,61 @@ GO
 ALTER TABLE [dbo].[quizsection] CHECK CONSTRAINT [FK_quizsection_quiz]
 GO
 
+-- Following parts are updated at 2017.8.23
+/****** Object:  View [dbo].[v_quizamountbydate]    Script Date: 2017-08-23 5:57:46 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_quizamountbydate]
+AS
+SELECT        CAST(submitdate AS DATE) as submitdate, attenduser, count( * ) as quizamount
+FROM          quiz
+GROUP BY	  CAST(submitdate AS DATE), attenduser
+GO
+
+/****** Object:  View [dbo].[v_quizamountbytype]    Script Date: 2017-08-23 5:58:21 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_quizamountbytype]
+AS
+SELECT  quiztype, attenduser, count( * ) as quizamount
+FROM    quiz
+GROUP BY quiztype, attenduser
+GO
+
+/****** Object:  View [dbo].[v_quizitemamountbydate]    Script Date: 2017-08-23 5:58:45 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_quizitemamountbydate]
+AS
+SELECT        CAST(dbo.quiz.submitdate AS DATE) AS submitdate, dbo.quiz.attenduser, SUM(dbo.quizsection.totalitems) AS totalitems, SUM(dbo.quizsection.faileditems) AS faileditems
+FROM            dbo.quiz LEFT OUTER JOIN
+                         dbo.quizsection ON dbo.quiz.quizid = dbo.quizsection.quizid
+GROUP BY CAST(dbo.quiz.submitdate AS DATE), dbo.quiz.attenduser
+GO
+
+/****** Object:  View [dbo].[v_quizitemamountbytype]    Script Date: 2017-08-23 5:59:17 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_quizitemamountbytype]
+AS
+SELECT        dbo.quiz.quiztype, dbo.quiz.attenduser, SUM(dbo.quizsection.totalitems) AS totalitems, SUM(dbo.quizsection.faileditems) AS faileditems
+FROM            dbo.quiz LEFT OUTER JOIN
+                         dbo.quizsection ON dbo.quiz.quizid = dbo.quizsection.quizid
+GROUP BY dbo.quiz.quiztype, dbo.quiz.attenduser
+GO

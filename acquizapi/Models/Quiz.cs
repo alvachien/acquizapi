@@ -52,4 +52,39 @@ namespace acquizapi.Models
         public String AttendUser { get; set; }
         public DateTime SubmitDate { get; set; }
     }
+
+    public abstract class QuizAmountStatistics
+    {
+        [StringLength(50)]
+        public String AttendUser { get; set; }
+        public Int32 Amount { get; set; }
+    }
+
+    public sealed class QuizAmountByDateStatistics: QuizAmountStatistics
+    {
+        public DateTime QuizDate { get; set; }
+    }
+
+    public sealed class QuizAmountByTypeStatistics: QuizAmountStatistics
+    {
+        public Int16 QuizType { get; set; }
+    }
+
+    public abstract class QuizItemAmountStatistics
+    {
+        [StringLength(50)]
+        public String AttendUser { get; set; }
+        public Int32 TotalAmount { get; set; }
+        public Int32 FailedAmount { get; set; }
+    }
+
+    public sealed class QuizItemAmountByDateStatistics: QuizItemAmountStatistics
+    {
+        public DateTime QuizDate { get; set; }
+    }
+
+    public sealed class QuizItemAmountByTypeStatistics: QuizItemAmountStatistics
+    {
+        public Int16 QuizType { get; set; }
+    }
 }
