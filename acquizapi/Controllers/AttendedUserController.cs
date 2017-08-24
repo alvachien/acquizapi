@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using acquizapi.Models;
 
 namespace acquizapi.Controllers
 {
@@ -19,7 +20,7 @@ namespace acquizapi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            List<String> listRst = new List<String>();
+            List<QuizAttendUser> listRst = new List<QuizAttendUser>();
             Boolean bError = false;
             String strErrMsg = "";
 
@@ -27,7 +28,9 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT DISTINCT [attenduser] FROM [quiz];";
+                String queryString = @"SELECT a.[attenduser], b.displayas FROM 
+                        (SELECT DISTINCT [attenduser] FROM [quiz]) a LEFT OUTER JOIN [quizuser] b 
+                        ON a.[attenduser] = b.[userid]";
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -35,7 +38,13 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        listRst.Add(reader.GetString(0));
+                        QuizAttendUser au = new QuizAttendUser();
+                        au.AttendUser = reader.GetString(0);
+                        if (reader.IsDBNull(1))
+                            au.DisplayAs = String.Empty;
+                        else 
+                            au.DisplayAs = reader.GetString(1);
+                        listRst.Add(au);
                     }
                 }
             }

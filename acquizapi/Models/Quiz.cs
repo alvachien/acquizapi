@@ -87,4 +87,22 @@ namespace acquizapi.Models
     {
         public Int16 QuizType { get; set; }
     }
+
+    public sealed class QuizAttendUser
+    {
+        [StringLength(50)]
+        public String AttendUser { get; set; }
+        [StringLength(50)]
+        public String DisplayAs { get; set; }
+    }
+
+    public sealed class UserDetail
+    {
+        [StringLength(50)]
+        public String UserID { get; set; }
+        [StringLength(50)]
+        public String DisplayAs { get; set; }
+        [StringLength(50)]
+        public String Others { get; set; }
+    }
 }
