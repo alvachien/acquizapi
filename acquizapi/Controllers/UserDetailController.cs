@@ -70,7 +70,7 @@ namespace acquizapi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
-            UserDetail objRst = new UserDetail();
+            UserDetail objRst = null;
             Boolean bError = false;
             String strErrMsg = "";
 
@@ -88,6 +88,7 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
+                        objRst = new UserDetail();
                         objRst.UserID = reader.GetString(0);
                         objRst.DisplayAs = reader.GetString(1);
                         if (reader.IsDBNull(2))
@@ -114,6 +115,9 @@ namespace acquizapi.Controllers
             {
                 return StatusCode(500, strErrMsg);
             }
+
+            if (objRst == null)
+                return NotFound();
 
             return new JsonResult(objRst);
         }
@@ -142,7 +146,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                queryString = @"INSERT INTO [dbo].[quiz] ([userid],[displayas],[others]) VALUES (@userid, @displayas, @others)";
+                queryString = @"INSERT INTO [quizuser] ([userid],[displayas],[others]) VALUES (@userid, @displayas, @others)";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@userid", ud.UserID);
@@ -200,15 +204,15 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                queryString = @"UPDATE [dbo].[quiz] SET [displayas] = @displayas, [others] = @others WHERE [userid] = @userid;";
+                queryString = @"UPDATE [dbo].[quizuser] SET [displayas] = @displayas, [others] = @others WHERE [userid] = @userid;";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@userid", ud.UserID);
                 cmd.Parameters.AddWithValue("@displayas", ud.DisplayAs);
                 if (String.IsNullOrEmpty(ud.Others))
                     cmd.Parameters.AddWithValue("@others", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@others", ud.Others);
+                cmd.Parameters.AddWithValue("@userid", ud.UserID);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 cmd.Dispose();
