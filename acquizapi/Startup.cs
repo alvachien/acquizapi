@@ -1,8 +1,11 @@
 ﻿
+#if DEBUG
+#undef USE_ALIYUN
+#undef USE_MICROSOFTAZURE
+#elif RELEASE
+#undef DEBUG
 //#define USE_MICROSOFTAZURE
 #define USE_ALIYUN
-#if RELEASE
-#undef DEBUG
 #endif
 
 using System;
@@ -44,7 +47,11 @@ namespace acquizapi
                 .AddJsonFormatters()
                 ;
 
+#if DEBUG
+            DBConnectionString = Configuration.GetConnectionString("DebugConnection");
+#else
             DBConnectionString = Configuration.GetConnectionString("DefaultConnection");
+#endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
