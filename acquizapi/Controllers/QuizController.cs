@@ -125,13 +125,58 @@ namespace acquizapi.Controllers
             String usrName = String.Empty;
             if (usr != null)
                 usrName = usr.Value;
+            else
+                return BadRequest();
+
+            List<AwardPlan> listAPlans = new List<AwardPlan>();
+            QuizCreateResult qcr = new QuizCreateResult();
+            SqlCommand cmd = null;
+            SqlTransaction tran = null;
 
             try
             {
                 await conn.OpenAsync();
+
+                // Read the award plan as the first setp
+                queryString = @"SELECT [planid],[tgtuser],[createdby],[validfrom],[validto],[quiztype],[minscore],[minavgtime],[award] FROM [dbo].[awardplan] 
+                    WHERE [tgtuser] = @tgtuser AND [quiztype] = @qtype AND @qdate >= [validfrom] AND @qdate <= [validto] ";
+                cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@tgtuser", usrName);
+                cmd.Parameters.AddWithValue("@qtype", qz.QuizType);
+                cmd.Parameters.AddWithValue("@qdate", qz.SubmitDate);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {                    
+                    while (reader.Read())
+                    {
+                        AwardPlan ap = new AwardPlan();
+                        ap.PlanID = reader.GetInt32(0);
+                        ap.TargetUser = reader.GetString(1);
+                        if (!reader.IsDBNull(2))
+                            ap.CreatedBy = reader.GetString(2);
+                        else
+                            ap.CreatedBy = String.Empty;
+                        ap.ValidFrom = reader.GetDateTime(3);
+                        ap.ValidTo = reader.GetDateTime(4);
+                        ap.QuizType = reader.GetInt16(5);
+                        if (!reader.IsDBNull(6))
+                            ap.MinQuizScore = reader.GetInt32(6);
+                        if (!reader.IsDBNull(7))
+                            ap.MinQuizAvgTime = reader.GetInt32(7);
+                        ap.Award = reader.GetInt32(8);
+                        listAPlans.Add(ap);
+                    }
+                }
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                tran = conn.BeginTransaction();                
                 queryString = @"INSERT INTO [dbo].[quiz] ([quiztype],[basicinfo],[attenduser],[submitdate]) VALUES (@quiztype, @basicinfo, @attenduser, @submitdate); SELECT @Identity = SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
+                cmd.Transaction = tran;
                 cmd.Parameters.AddWithValue("@quiztype", qz.QuizType);
                 cmd.Parameters.AddWithValue("@basicinfo", qz.BasicInfo);
                 cmd.Parameters.AddWithValue("@attenduser", usrName);
@@ -141,6 +186,7 @@ namespace acquizapi.Controllers
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 nNewID = (Int32)idparam.Value;
+                qcr.QuizID = nNewID;
                 cmd.Dispose();
                 cmd = null;
 
@@ -149,6 +195,7 @@ namespace acquizapi.Controllers
                 {
                     queryString = @"INSERT INTO [dbo].[quizsection]([quizid],[section],[timespent],[totalitems],[faileditems]) VALUES(@quizid, @section, @timespent,@totalitems,@faileditems);";
                     cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
                     cmd.Parameters.AddWithValue("@quizid", nNewID);
                     cmd.Parameters.AddWithValue("@section", sect.SectionID);
                     cmd.Parameters.AddWithValue("@timespent", sect.TimeSpent);
@@ -165,6 +212,7 @@ namespace acquizapi.Controllers
                 {
                     queryString = @"INSERT INTO [dbo].[quizfaillog]([quizid],[failidx],[expected],[inputted]) VALUES(@quizid,@failidx,@expected,@inputted);";
                     cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
                     cmd.Parameters.AddWithValue("@quizid", nNewID);
                     cmd.Parameters.AddWithValue("@failidx", fl.QuizFailIndex);
                     cmd.Parameters.AddWithValue("@expected", fl.Expected);
@@ -174,12 +222,59 @@ namespace acquizapi.Controllers
                     cmd.Dispose();
                     cmd = null;
                 }
+
+                // Now, work for the award
+                foreach(AwardPlan ap in listAPlans)
+                {
+                    if (ap.MinQuizScore.HasValue)
+                    {
+                        if (qz.TotalScore < ap.MinQuizScore.Value)
+                            continue;
+                    }
+                    if (ap.MinQuizAvgTime.HasValue)
+                    {
+                        if (qz.TotalAverageTime > ap.MinQuizAvgTime.Value)
+                            continue;
+                    }
+
+                    queryString = @"INSERT INTO [dbo].[useraward] ([userid],[adate],[award],[planid],[qid],[used])
+                                VALUES(@userid,@adate,@award,@planid,@qid, @used);
+                                SELECT @Identity = SCOPE_IDENTITY();";
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Transaction = tran;
+                    cmd.Parameters.AddWithValue("@userid", usrName);
+                    cmd.Parameters.AddWithValue("@adate", qz.SubmitDate);
+                    cmd.Parameters.AddWithValue("@award", ap.Award);
+                    cmd.Parameters.AddWithValue("@planid", ap.PlanID);
+                    cmd.Parameters.AddWithValue("@qid", nNewID);
+                    cmd.Parameters.AddWithValue("@used", DBNull.Value);
+                    SqlParameter idparam2 = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
+                    idparam2.Direction = ParameterDirection.Output;
+
+                    qcr.TotalAwardPoint += ap.Award;
+
+                    nRst = await cmd.ExecuteNonQueryAsync();
+                    qcr.AwardIDList.Add((Int32)idparam2.Value);
+                    cmd.Dispose();
+                    cmd = null;
+                }
+
+                // No errors!
+                tran.Commit();
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
                 bError = true;
                 strErrMsg = exp.Message;
+
+                if (tran != null)
+                {
+                    tran.Rollback();
+                    tran.Dispose();
+                    tran = null;
+                }
             }
             finally
             {
@@ -193,10 +288,11 @@ namespace acquizapi.Controllers
             }
 
             qz.QuizID = nNewID;
+
             var setting = new Newtonsoft.Json.JsonSerializerSettings();
             setting.DateFormatString = "yyyy-MM-dd";
             setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
-            return new JsonResult(qz, setting);
+            return new JsonResult(qcr, setting);
         }
 
         // PUT: api/quiz/5

@@ -165,3 +165,89 @@ CREATE TABLE [dbo].[quizuser](
 ) ON [PRIMARY]
 GO
 
+
+-- Following parts are updated at 2017.9.2
+
+/****** Object:  Table [dbo].[permuser]    Script Date: 2017-09-02 9:15:38 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[permuser](
+	[userid] [nvarchar](50) NOT NULL,
+	[monitor] [nvarchar](50) NOT NULL,
+ CONSTRAINT [PK_permuser] PRIMARY KEY CLUSTERED 
+(
+	[userid] ASC,
+	[monitor] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+/****** Object:  Table [dbo].[awardplan]    Script Date: 2017-09-02 9:43:08 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[awardplan](
+	[planid] [int] IDENTITY(1,1) NOT NULL,
+	[tgtuser] [nvarchar](50) NOT NULL,
+	[createdby] [nvarchar](50) NULL,
+	[validfrom] [date] NOT NULL,
+	[validto] [date] NOT NULL,
+	[quiztype] [smallint] NOT NULL,
+	[minscore] [int] NULL,
+	[minavgtime] [int] NULL,
+	[award] [int] NOT NULL,
+ CONSTRAINT [PK_awardplan] PRIMARY KEY CLUSTERED 
+(
+	[planid] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+/****** Object:  Table [dbo].[useraward]    Script Date: 2017-09-02 9:16:48 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[useraward](
+	[aid] [int] IDENTITY(1,1) NOT NULL,
+	[userid] [nvarchar](50) NOT NULL,
+	[adate] [date] NOT NULL,
+	[award] [int] NOT NULL,
+	[planid] [int] NULL,
+	[qid] [int] NULL,
+	[used] [nvarchar](50) NULL,
+ CONSTRAINT [PK_useraward] PRIMARY KEY CLUSTERED 
+(
+	[aid] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+/****** Object:  View [dbo].[v_permuser]    Script Date: 2017-09-02 9:35:01 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_permuser]
+AS
+SELECT        userid, monitor
+FROM            dbo.permuser
+
+UNION ALL
+SELECT userid, userid as monitor
+FROM dbo.permuser
+
+GO
+
