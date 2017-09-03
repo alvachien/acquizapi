@@ -233,7 +233,9 @@ CREATE TABLE [dbo].[useraward](
 ) ON [PRIMARY]
 GO
 
-/****** Object:  View [dbo].[v_permuser]    Script Date: 2017-09-02 9:35:01 PM ******/
+-- Following parts are updated at 2017.9.3
+
+/****** Object:  View [dbo].[v_permuser]    Script Date: 2017-09-03 4:56:08 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -242,12 +244,12 @@ GO
 
 CREATE VIEW [dbo].[v_permuser]
 AS
-SELECT        userid, monitor
-FROM            dbo.permuser
-
-UNION ALL
-SELECT userid, userid as monitor
-FROM dbo.permuser
-
+SELECT DISTINCT userid, monitor
+FROM            (SELECT        userid, monitor
+                          FROM            dbo.permuser
+                          UNION ALL
+                          SELECT        userid, userid AS monitor
+                          FROM            dbo.permuser AS permuser_1) AS derivedtbl_1
 GO
+
 
