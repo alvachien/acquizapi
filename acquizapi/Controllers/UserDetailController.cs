@@ -35,9 +35,11 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        UserDetail ud = new UserDetail();
-                        ud.UserID = reader.GetString(0);
-                        ud.DisplayAs = reader.GetString(1);
+                        UserDetail ud = new UserDetail
+                        {
+                            UserID = reader.GetString(0),
+                            DisplayAs = reader.GetString(1)
+                        };
                         if (reader.IsDBNull(2))
                             ud.Others = null;
                         else
@@ -88,9 +90,11 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        objRst = new UserDetail();
-                        objRst.UserID = reader.GetString(0);
-                        objRst.DisplayAs = reader.GetString(1);
+                        objRst = new UserDetail
+                        {
+                            UserID = reader.GetString(0),
+                            DisplayAs = reader.GetString(1)
+                        };
                         if (reader.IsDBNull(2))
                             objRst.Others = null;
                         else

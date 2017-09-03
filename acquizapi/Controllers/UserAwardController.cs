@@ -28,7 +28,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[qid],[used] FROM [dbo].[useraward] ";
+                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[quiztype],[qid],[used] FROM [dbo].[v_useraward] ";
                 if (!String.IsNullOrEmpty(userid))
                 {
                     queryString += " WHERE [userid] = N'" + userid + "'";
@@ -41,24 +41,7 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        UserAward ua = new UserAward();
-                        ua.AwardID = reader.GetInt32(0);
-                        ua.UserID = reader.GetString(1);
-                        ua.AwardDate = reader.GetDateTime(2);
-                        ua.Award = reader.GetInt32(3);
-                        if (!reader.IsDBNull(4))
-                            ua.AwardPlanID = reader.GetInt32(4);
-                        else
-                            ua.AwardPlanID = null;
-                        if (!reader.IsDBNull(5))
-                            ua.QuizID = reader.GetInt32(5);
-                        else
-                            ua.QuizID = null;
-                        if (!reader.IsDBNull(6))
-                            ua.UsedReason = reader.GetString(6);
-                        else
-                            ua.UsedReason = String.Empty;
-                        listRst.Add(ua);
+                        listRst.Add(ConvertDB2VM(reader));
                     }
                 }
             }
@@ -79,17 +62,48 @@ namespace acquizapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listRst, setting);
+        }
+
+        private UserAward ConvertDB2VM(SqlDataReader reader)
+        {
+            UserAward ua = new UserAward
+            {
+                AwardID = reader.GetInt32(0),
+                UserID = reader.GetString(1),
+                AwardDate = reader.GetDateTime(2),
+                Award = reader.GetInt32(3)
+            };
+            if (!reader.IsDBNull(4))
+                ua.AwardPlanID = reader.GetInt32(4);
+            else
+                ua.AwardPlanID = null;
+            if (!reader.IsDBNull(5))
+                ua.QuizType = reader.GetInt16(5);
+            else
+                ua.QuizType = null;
+            if (!reader.IsDBNull(6))
+                ua.QuizID = reader.GetInt32(6);
+            else
+                ua.QuizID = null;
+            if (!reader.IsDBNull(7))
+                ua.UsedReason = reader.GetString(7);
+            else
+                ua.UsedReason = String.Empty;
+            return ua;
         }
 
         // GET: api/UserAward/5
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            UserAward objRst = new UserAward();
+            UserAward objRst = null;
             Boolean bError = false;
             String strErrMsg = "";
 
@@ -97,7 +111,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[qid],[used] FROM [dbo].[useraward] WHERE [aid] = @aid;";
+                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[quiztype],[qid],[used] FROM [dbo].[v_useraward] WHERE [aid] = @aid;";
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@aid", id);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -106,22 +120,7 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        objRst.AwardID = reader.GetInt32(0);
-                        objRst.UserID = reader.GetString(1);
-                        objRst.AwardDate = reader.GetDateTime(2);
-                        objRst.Award = reader.GetInt32(3);
-                        if (!reader.IsDBNull(4))
-                            objRst.AwardPlanID = reader.GetInt32(4);
-                        else
-                            objRst.AwardPlanID = null;
-                        if (!reader.IsDBNull(5))
-                            objRst.QuizID = reader.GetInt32(5);
-                        else
-                            objRst.QuizID = null;
-                        if (!reader.IsDBNull(6))
-                            objRst.UsedReason = reader.GetString(6);
-                        else
-                            objRst.UsedReason = String.Empty;
+                        objRst = ConvertDB2VM(reader);
                         break;
                     }
                 }
@@ -143,9 +142,12 @@ namespace acquizapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(objRst, setting);
         }
 

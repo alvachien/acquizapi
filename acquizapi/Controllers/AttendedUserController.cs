@@ -49,8 +49,10 @@ namespace acquizapi.Controllers
                     {
                         while (reader.Read())
                         {
-                            QuizAttendUser au = new QuizAttendUser();
-                            au.AttendUser = reader.GetString(0);
+                            QuizAttendUser au = new QuizAttendUser
+                            {
+                                AttendUser = reader.GetString(0)
+                            };
                             if (reader.IsDBNull(1))
                                 au.DisplayAs = String.Empty;
                             else
@@ -61,9 +63,11 @@ namespace acquizapi.Controllers
 
                     if (listRst.Count == 0)
                     {
-                        QuizAttendUser au = new QuizAttendUser();
-                        au.AttendUser = usrName;
-                        au.DisplayAs = usrName;
+                        QuizAttendUser au = new QuizAttendUser
+                        {
+                            AttendUser = usrName,
+                            DisplayAs = usrName
+                        };
                         listRst.Add(au);
                     }
                 }

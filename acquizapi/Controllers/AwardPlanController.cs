@@ -50,9 +50,11 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        AwardPlan ap = new AwardPlan();
-                        ap.PlanID = reader.GetInt32(0);
-                        ap.TargetUser = reader.GetString(1);
+                        AwardPlan ap = new AwardPlan
+                        {
+                            PlanID = reader.GetInt32(0),
+                            TargetUser = reader.GetString(1)
+                        };
                         if (!reader.IsDBNull(2))
                             ap.CreatedBy = reader.GetString(2);
                         else
@@ -86,9 +88,12 @@ namespace acquizapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listRst, setting);
         }
 
@@ -149,9 +154,12 @@ namespace acquizapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(objRst, setting);
         }
 

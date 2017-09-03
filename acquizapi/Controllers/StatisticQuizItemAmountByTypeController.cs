@@ -61,11 +61,13 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        QuizItemAmountByTypeStatistics qz = new QuizItemAmountByTypeStatistics();
-                        qz.QuizType = reader.GetInt16(0);
-                        qz.AttendUser = reader.GetString(1);
-                        qz.TotalAmount = reader.GetInt32(2);
-                        qz.FailedAmount = reader.GetInt32(3);
+                        QuizItemAmountByTypeStatistics qz = new QuizItemAmountByTypeStatistics
+                        {
+                            QuizType = reader.GetInt16(0),
+                            AttendUser = reader.GetString(1),
+                            TotalAmount = reader.GetInt32(2),
+                            FailedAmount = reader.GetInt32(3)
+                        };
                         listRst.Add(qz);
                     }
                 }
@@ -87,9 +89,12 @@ namespace acquizapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listRst, setting);
         }
     }

@@ -252,4 +252,18 @@ FROM            (SELECT        userid, monitor
                           FROM            dbo.permuser AS permuser_1) AS derivedtbl_1
 GO
 
+/****** Object:  View [dbo].[v_useraward]    Script Date: 2017-09-03 8:34:51 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_useraward]
+AS
+SELECT        dbo.useraward.aid, dbo.useraward.userid, dbo.useraward.adate, dbo.useraward.award, dbo.useraward.planid, dbo.awardplan.quiztype, dbo.useraward.qid, dbo.useraward.used
+FROM            dbo.useraward INNER JOIN
+                         dbo.awardplan ON dbo.useraward.planid = dbo.awardplan.planid
+GO
+
 

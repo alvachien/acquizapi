@@ -51,9 +51,12 @@ namespace acquizapi.Controllers
                 return StatusCode(500, strErrMsg);
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listRst, setting);
         }
 
@@ -98,9 +101,12 @@ namespace acquizapi.Controllers
                 return NotFound();
             }
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(listRst[0], setting);
         }
 
@@ -149,9 +155,11 @@ namespace acquizapi.Controllers
                 {                    
                     while (reader.Read())
                     {
-                        AwardPlan ap = new AwardPlan();
-                        ap.PlanID = reader.GetInt32(0);
-                        ap.TargetUser = reader.GetString(1);
+                        AwardPlan ap = new AwardPlan
+                        {
+                            PlanID = reader.GetInt32(0),
+                            TargetUser = reader.GetString(1)
+                        };
                         if (!reader.IsDBNull(2))
                             ap.CreatedBy = reader.GetString(2);
                         else
@@ -175,8 +183,10 @@ namespace acquizapi.Controllers
                 tran = conn.BeginTransaction();                
                 queryString = @"INSERT INTO [dbo].[quiz] ([quiztype],[basicinfo],[attenduser],[submitdate]) VALUES (@quiztype, @basicinfo, @attenduser, @submitdate); SELECT @Identity = SCOPE_IDENTITY();";
 
-                cmd = new SqlCommand(queryString, conn);
-                cmd.Transaction = tran;
+                cmd = new SqlCommand(queryString, conn)
+                {
+                    Transaction = tran
+                };
                 cmd.Parameters.AddWithValue("@quiztype", qz.QuizType);
                 cmd.Parameters.AddWithValue("@basicinfo", qz.BasicInfo);
                 cmd.Parameters.AddWithValue("@attenduser", usrName);
@@ -194,8 +204,10 @@ namespace acquizapi.Controllers
                 foreach (QuizSection sect in qz.Sections)
                 {
                     queryString = @"INSERT INTO [dbo].[quizsection]([quizid],[section],[timespent],[totalitems],[faileditems]) VALUES(@quizid, @section, @timespent,@totalitems,@faileditems);";
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
                     cmd.Parameters.AddWithValue("@quizid", nNewID);
                     cmd.Parameters.AddWithValue("@section", sect.SectionID);
                     cmd.Parameters.AddWithValue("@timespent", sect.TimeSpent);
@@ -211,8 +223,10 @@ namespace acquizapi.Controllers
                 foreach (QuizFailLog fl in qz.FailLogs)
                 {
                     queryString = @"INSERT INTO [dbo].[quizfaillog]([quizid],[failidx],[expected],[inputted]) VALUES(@quizid,@failidx,@expected,@inputted);";
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
                     cmd.Parameters.AddWithValue("@quizid", nNewID);
                     cmd.Parameters.AddWithValue("@failidx", fl.QuizFailIndex);
                     cmd.Parameters.AddWithValue("@expected", fl.Expected);
@@ -241,8 +255,10 @@ namespace acquizapi.Controllers
                                 VALUES(@userid,@adate,@award,@planid,@qid, @used);
                                 SELECT @Identity = SCOPE_IDENTITY();";
 
-                    cmd = new SqlCommand(queryString, conn);
-                    cmd.Transaction = tran;
+                    cmd = new SqlCommand(queryString, conn)
+                    {
+                        Transaction = tran
+                    };
                     cmd.Parameters.AddWithValue("@userid", usrName);
                     cmd.Parameters.AddWithValue("@adate", qz.SubmitDate);
                     cmd.Parameters.AddWithValue("@award", ap.Award);
@@ -289,9 +305,12 @@ namespace acquizapi.Controllers
 
             qz.QuizID = nNewID;
 
-            var setting = new Newtonsoft.Json.JsonSerializerSettings();
-            setting.DateFormatString = "yyyy-MM-dd";
-            setting.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(); ;
+            var setting = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                DateFormatString = "yyyy-MM-dd",
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+            ;
             return new JsonResult(qcr, setting);
         }
 
@@ -326,9 +345,11 @@ namespace acquizapi.Controllers
                 {
                     while (reader.Read())
                     {
-                        Quiz qz = new Quiz();
-                        qz.QuizID = reader.GetInt32(0);
-                        qz.QuizType = reader.GetInt16(1);
+                        Quiz qz = new Quiz
+                        {
+                            QuizID = reader.GetInt32(0),
+                            QuizType = reader.GetInt16(1)
+                        };
                         if (!reader.IsDBNull(2))
                         {
                             qz.BasicInfo = reader.GetString(2);
@@ -351,11 +372,13 @@ namespace acquizapi.Controllers
 
                     while (reader.Read())
                     {
-                        QuizFailLog fl = new QuizFailLog();
-                        fl.QuizID = reader.GetInt32(0);
-                        fl.QuizFailIndex = reader.GetInt32(1);
-                        fl.Expected = reader.GetString(2);
-                        fl.Inputted = reader.GetString(3);
+                        QuizFailLog fl = new QuizFailLog
+                        {
+                            QuizID = reader.GetInt32(0),
+                            QuizFailIndex = reader.GetInt32(1),
+                            Expected = reader.GetString(2),
+                            Inputted = reader.GetString(3)
+                        };
                         listLogs.Add(fl);
                     }
 
@@ -384,12 +407,14 @@ namespace acquizapi.Controllers
                     List<QuizSection> listSect = new List<QuizSection>();
                     while (reader.Read())
                     {
-                        QuizSection qs = new QuizSection();
-                        qs.QuizID = reader.GetInt32(0);
-                        qs.SectionID = reader.GetInt32(1);
-                        qs.TimeSpent = reader.GetInt32(2);
-                        qs.TotalItems = reader.GetInt32(3);
-                        qs.FailedItems = reader.GetInt32(4);
+                        QuizSection qs = new QuizSection
+                        {
+                            QuizID = reader.GetInt32(0),
+                            SectionID = reader.GetInt32(1),
+                            TimeSpent = reader.GetInt32(2),
+                            TotalItems = reader.GetInt32(3),
+                            FailedItems = reader.GetInt32(4)
+                        };
                         listSect.Add(qs);
                     }
 

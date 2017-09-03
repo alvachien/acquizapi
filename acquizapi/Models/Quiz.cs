@@ -181,6 +181,7 @@ namespace acquizapi.Models
         [Required]
         public Int32 Award { get; set; }
         public Int32? AwardPlanID { get; set; }
+        public Int16? QuizType { get; set; }
         public Int32? QuizID { get; set; }
         [StringLength(50)]
         public String UsedReason { get; set; }
