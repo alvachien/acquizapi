@@ -183,6 +183,23 @@ namespace acquizapi.Controllers
             String usrName = String.Empty;
             if (usr != null)
                 usrName = usr.Value;
+            else
+                return BadRequest();
+
+            if (String.IsNullOrEmpty(ap.CreatedBy))
+            {
+                if (String.CompareOrdinal(usrName, ap.TargetUser) == 0)
+                {
+                    return BadRequest();
+                }
+            }
+            else
+            {
+                if (String.CompareOrdinal(ap.CreatedBy, ap.TargetUser) == 0)
+                {
+                    return BadRequest();
+                }
+            }
 
             try
             {
@@ -195,14 +212,7 @@ namespace acquizapi.Controllers
                 cmd.Parameters.AddWithValue("@tgtuser", ap.TargetUser);
                 if (String.IsNullOrEmpty(ap.CreatedBy))
                 {
-                    if (!String.IsNullOrEmpty(usrName))
-                    {
-                        cmd.Parameters.AddWithValue("@createdby", usrName);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@createdby", DBNull.Value);
-                    }
+                    cmd.Parameters.AddWithValue("@createdby", usrName);
                 }
                 else
                     cmd.Parameters.AddWithValue("@createdby", ap.CreatedBy);
