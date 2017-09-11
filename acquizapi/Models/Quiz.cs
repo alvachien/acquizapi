@@ -149,6 +149,10 @@ namespace acquizapi.Models
         public String DisplayAs { get; set; }
         [StringLength(50)]
         public String Others { get; set; }
+        [StringLength(5)]
+        public String AwardControl { get; set; }
+        [StringLength(5)]
+        public String AwardPlanControl { get; set; }
     }
 
     public sealed class AwardPlan

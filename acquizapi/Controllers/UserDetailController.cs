@@ -27,7 +27,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [userid], [displayas], [others] FROM [quizuser];";
+                String queryString = @"SELECT [userid], [displayas], [others],[award],[awardplan] FROM [quizuser] WHERE [deletionflag] != 1;";
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -44,6 +44,14 @@ namespace acquizapi.Controllers
                             ud.Others = null;
                         else
                             ud.Others = reader.GetString(2);
+                        if (reader.IsDBNull(3))
+                            ud.AwardControl = null;
+                        else
+                            ud.AwardControl = reader.GetString(3);
+                        if (reader.IsDBNull(4))
+                            ud.AwardPlanControl = null;
+                        else
+                            ud.AwardPlanControl = reader.GetString(4);
                         listRst.Add(ud);
                     }
                 }
@@ -81,7 +89,7 @@ namespace acquizapi.Controllers
             {
                 await conn.OpenAsync();
 
-                String queryString = @"SELECT [userid], [displayas], [others] FROM [quizuser] WHERE [userid] = @id;";
+                String queryString = @"SELECT [userid], [displayas], [others],[award],[awardplan] FROM [quizuser] WHERE [userid] = @id;";
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@id", id);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -99,6 +107,14 @@ namespace acquizapi.Controllers
                             objRst.Others = null;
                         else
                             objRst.Others = reader.GetString(2);
+                        if (reader.IsDBNull(3))
+                            objRst.AwardControl = null;
+                        else
+                            objRst.AwardControl = reader.GetString(3);
+                        if (reader.IsDBNull(4))
+                            objRst.AwardPlanControl = null;
+                        else
+                            objRst.AwardPlanControl = reader.GetString(4);
                         break;
                     }
                 }
@@ -150,7 +166,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                queryString = @"INSERT INTO [quizuser] ([userid],[displayas],[others]) VALUES (@userid, @displayas, @others)";
+                queryString = @"INSERT INTO [quizuser] ([userid],[displayas],[others],[award],[awardplan]) VALUES (@userid, @displayas, @others, @award, @awardplan)";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@userid", ud.UserID);
@@ -159,6 +175,14 @@ namespace acquizapi.Controllers
                     cmd.Parameters.AddWithValue("@others", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@others", ud.Others);
+                if (String.IsNullOrEmpty(ud.AwardControl))
+                    cmd.Parameters.AddWithValue("@award", DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("@award", ud.AwardControl);
+                if (String.IsNullOrEmpty(ud.AwardPlanControl))
+                    cmd.Parameters.AddWithValue("@awardplan", DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("@awardplan", ud.AwardControl);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
                 cmd.Dispose();
@@ -208,7 +232,8 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                queryString = @"UPDATE [dbo].[quizuser] SET [displayas] = @displayas, [others] = @others WHERE [userid] = @userid;";
+                queryString = @"UPDATE [dbo].[quizuser] SET [displayas] = @displayas, [others] = @others, 
+                                        [award] = @award, [awardplan] = @awardplan WHERE [userid] = @userid;";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@displayas", ud.DisplayAs);
@@ -216,6 +241,14 @@ namespace acquizapi.Controllers
                     cmd.Parameters.AddWithValue("@others", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@others", ud.Others);
+                if (String.IsNullOrEmpty(ud.AwardControl))
+                    cmd.Parameters.AddWithValue("@award", DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("@award", ud.AwardControl);
+                if (String.IsNullOrEmpty(ud.AwardPlanControl))
+                    cmd.Parameters.AddWithValue("@awardplan", DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("@awardplan", ud.AwardControl);
                 cmd.Parameters.AddWithValue("@userid", ud.UserID);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
@@ -246,6 +279,7 @@ namespace acquizapi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            // Todo
             return BadRequest();
         }
     }

@@ -266,4 +266,12 @@ FROM            dbo.useraward INNER JOIN
                          dbo.awardplan ON dbo.useraward.planid = dbo.awardplan.planid
 GO
 
+-- Following parts are updated at 2017.9.11
+/* Alter table by adding columns */
+ALTER TABLE [dbo].[quizuser]
+ADD 
+	[award] [nvarchar](5) NULL,
+	[awardplan] [nvarchar](5) NULL,
+	[deletionflag] [bit] NULL
+GO
 
