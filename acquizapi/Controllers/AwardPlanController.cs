@@ -186,29 +186,60 @@ namespace acquizapi.Controllers
             else
                 return BadRequest();
 
+#if DEBUG
+            // Just skip this check in debug mode
+#else
             if (String.IsNullOrEmpty(ap.CreatedBy))
             {
                 if (String.CompareOrdinal(usrName, ap.TargetUser) == 0)
                 {
-                    return BadRequest();
+                    return BadRequest("Cannot create an plan for yourself");
                 }
             }
             else
             {
                 if (String.CompareOrdinal(ap.CreatedBy, ap.TargetUser) == 0)
                 {
-                    return BadRequest();
+                    return BadRequest("Cannot create an plan for yourself");
                 }
             }
+#endif
 
             try
             {
                 await conn.OpenAsync();
+
+                // Check the authority
+                Boolean bAllow = false;
+                queryString = @"SELECT COUNT(*) AS COUNT FROM [quizuser] WHERE [userid] = N'" + usrName + "' AND [awardplan] LIKE '%C%'";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if(reader.HasRows)
+                {
+                    while(reader.Read())
+                    {
+                        if (reader.GetInt32(0) > 0)
+                        {
+                            bAllow = true;
+                            break;
+                        }
+                    }
+                }
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (!bAllow)
+                {
+                    return BadRequest("No authority to create plan");
+                }
+
                 queryString = @"INSERT INTO [dbo].[awardplan] ([tgtuser],[createdby],[validfrom],[validto],[quiztype],[minscore],[minavgtime],[award])
                     VALUES(@tgtuser, @createdby, @validfrom, @validto, @quiztype, @minscore, @minavgtime, @award);
                     SELECT @Identity = SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@tgtuser", ap.TargetUser);
                 if (String.IsNullOrEmpty(ap.CreatedBy))
                 {
@@ -276,10 +307,40 @@ namespace acquizapi.Controllers
             String usrName = String.Empty;
             if (usr != null)
                 usrName = usr.Value;
+            else
+                return BadRequest("No user info found");
 
             try
             {
                 await conn.OpenAsync();
+
+                // Check the authority
+                Boolean bAllow = false;
+                queryString = @"SELECT COUNT(*) AS COUNT FROM [quizuser] WHERE [userid] = N'" + usrName + "' AND [awardplan] LIKE '%U%'";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.GetInt32(0) > 0)
+                        {
+                            bAllow = true;
+                            break;
+                        }
+                    }
+                }
+
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (!bAllow)
+                {
+                    return BadRequest("No authority to create plan");
+                }
+
                 queryString = @"UPDATE [dbo].[awardplan]
                     SET [tgtuser] = @tgtuser
                       ,[createdby] = @createdby
@@ -291,7 +352,7 @@ namespace acquizapi.Controllers
                       ,[award] = @award
                     WHERE [planid] = @planid;";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@tgtuser", ap.TargetUser);
                 if (String.IsNullOrEmpty(ap.CreatedBy))
                     cmd.Parameters.AddWithValue("@createdby", DBNull.Value);
@@ -345,12 +406,48 @@ namespace acquizapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            // Get user name
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
+            else
+                return BadRequest("No user info found");
+
             try
             {
                 await conn.OpenAsync();
+
+                // Check the authority
+                Boolean bAllow = false;
+                queryString = @"SELECT COUNT(*) AS COUNT FROM [quizuser] WHERE [userid] = N'" + usrName + "' AND [awardplan] LIKE '%C%'";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.GetInt32(0) > 0)
+                        {
+                            bAllow = true;
+                            break;
+                        }
+                    }
+                }
+
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (!bAllow)
+                {
+                    return BadRequest("No authority to delete plan");
+                }
+
                 queryString = @"DELETE FROM[dbo].[awardplan] WHERE [planid] = @planid;";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@planid", id);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();

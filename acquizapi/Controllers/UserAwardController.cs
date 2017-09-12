@@ -171,15 +171,45 @@ namespace acquizapi.Controllers
             String usrName = String.Empty;
             if (usr != null)
                 usrName = usr.Value;
+            else
+                return BadRequest("No user info found");
 
             try
             {
                 await conn.OpenAsync();
+
+                // Check the authority
+                Boolean bAllow = false;
+                queryString = @"SELECT COUNT(*) AS COUNT FROM [quizuser] WHERE [userid] = N'" + usrName + "' AND [award] LIKE '%C%'";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.GetInt32(0) > 0)
+                        {
+                            bAllow = true;
+                            break;
+                        }
+                    }
+                }
+
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (!bAllow)
+                {
+                    return BadRequest("No authority to delete plan");
+                }
+
                 queryString = @"INSERT INTO [dbo].[useraward] ([userid],[adate],[award],[planid],[qid],[used])
                     VALUES(@userid,@adate,@award,@planid,@qid, @used);
                     SELECT @Identity = SCOPE_IDENTITY();";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@userid", vm.UserID);
                 cmd.Parameters.AddWithValue("@adate", vm.AwardDate);
                 cmd.Parameters.AddWithValue("@award", vm.Award);
@@ -190,7 +220,7 @@ namespace acquizapi.Controllers
                 if (vm.QuizID.HasValue)
                     cmd.Parameters.AddWithValue("@qid", vm.QuizID);
                 else
-                    cmd.Parameters.AddWithValue("@planid", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@qid", DBNull.Value);
                 if (String.IsNullOrEmpty(vm.UsedReason))
                     cmd.Parameters.AddWithValue("@used", DBNull.Value);
                 else
@@ -243,10 +273,40 @@ namespace acquizapi.Controllers
             String usrName = String.Empty;
             if (usr != null)
                 usrName = usr.Value;
+            else
+                return BadRequest("No user info found");
 
             try
             {
                 await conn.OpenAsync();
+
+                // Check the authority
+                Boolean bAllow = false;
+                queryString = @"SELECT COUNT(*) AS COUNT FROM [quizuser] WHERE [userid] = N'" + usrName + "' AND [award] LIKE '%U%'";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.GetInt32(0) > 0)
+                        {
+                            bAllow = true;
+                            break;
+                        }
+                    }
+                }
+
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (!bAllow)
+                {
+                    return BadRequest("No authority to delete plan");
+                }
+
                 queryString = @"UPDATE [dbo].[useraward]
                     SET [userid] = @userid
                         ,[adate] = @adate
@@ -256,7 +316,7 @@ namespace acquizapi.Controllers
                         ,[used] = @used
                     WHERE [aid] = @aid;";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@userid", vm.UserID);
                 cmd.Parameters.AddWithValue("@adate", vm.AwardDate);
                 cmd.Parameters.AddWithValue("@award", vm.Award);
@@ -308,12 +368,48 @@ namespace acquizapi.Controllers
             Boolean bError = false;
             String strErrMsg = "";
 
+            // Get user name
+            var usr = User.FindFirst(c => c.Type == "sub");
+            String usrName = String.Empty;
+            if (usr != null)
+                usrName = usr.Value;
+            else
+                return BadRequest("No user info found");
+
             try
             {
                 await conn.OpenAsync();
+
+                // Check the authority
+                Boolean bAllow = false;
+                queryString = @"SELECT COUNT(*) AS COUNT FROM [quizuser] WHERE [userid] = N'" + usrName + "' AND [award] LIKE '%D%'";
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.GetInt32(0) > 0)
+                        {
+                            bAllow = true;
+                            break;
+                        }
+                    }
+                }
+
+                reader.Dispose();
+                reader = null;
+                cmd.Dispose();
+                cmd = null;
+
+                if (!bAllow)
+                {
+                    return BadRequest("No authority to delete plan");
+                }
+
                 queryString = @"DELETE FROM [dbo].[useraward] WHERE [aid] = @aid;";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@aid", id);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
