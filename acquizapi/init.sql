@@ -295,5 +295,5 @@ GO
 CREATE VIEW [dbo].[v_useraward]
 AS
 SELECT  taba.[aid], taba.[userid], taba.[adate], taba.[award], taba.[planid], tabb.[quiztype], taba.[qid], taba.[used], taba.[publish]
-FROM    [dbo].[useraward] taba INNER JOIN [dbo].[awardplan] tabb ON taba.[planid] = tabb.[planid]
+FROM    [dbo].[useraward] taba LEFT OUTER JOIN [dbo].[awardplan] tabb ON taba.[planid] = tabb.[planid]
 GO
