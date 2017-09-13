@@ -275,3 +275,25 @@ ADD
 	[deletionflag] [bit] NULL
 GO
 
+-- Following parts are updated at 2017.9.11
+/* Alter table by adding columns */
+ALTER TABLE [dbo].[useraward]
+ADD 
+	[publish] bit NULL
+GO
+
+-- Rebuild view V_USERAWARD
+DROP VIEW [dbo].[v_useraward]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE VIEW [dbo].[v_useraward]
+AS
+SELECT  taba.[aid], taba.[userid], taba.[adate], taba.[award], taba.[planid], tabb.[quiztype], taba.[qid], taba.[used], taba.[publish]
+FROM    [dbo].[useraward] taba INNER JOIN [dbo].[awardplan] tabb ON taba.[planid] = tabb.[planid]
+GO

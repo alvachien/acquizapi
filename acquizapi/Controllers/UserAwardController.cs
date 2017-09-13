@@ -28,7 +28,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[quiztype],[qid],[used] FROM [dbo].[v_useraward] ";
+                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[quiztype],[qid],[used],[publish] FROM [dbo].[v_useraward] ";
                 if (!String.IsNullOrEmpty(userid))
                 {
                     queryString += " WHERE [userid] = N'" + userid + "'";
@@ -80,6 +80,7 @@ namespace acquizapi.Controllers
                 AwardDate = reader.GetDateTime(2),
                 Award = reader.GetInt32(3)
             };
+
             if (!reader.IsDBNull(4))
                 ua.AwardPlanID = reader.GetInt32(4);
             else
@@ -96,6 +97,10 @@ namespace acquizapi.Controllers
                 ua.UsedReason = reader.GetString(7);
             else
                 ua.UsedReason = String.Empty;
+            if (!reader.IsDBNull(8))
+                ua.Publish = reader.GetBoolean(8);
+            else
+                ua.Publish = null;
             return ua;
         }
 
@@ -111,7 +116,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[quiztype],[qid],[used] FROM [dbo].[v_useraward] WHERE [aid] = @aid;";
+                String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[quiztype],[qid],[used],[publish] FROM [dbo].[v_useraward] WHERE [aid] = @aid;";
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@aid", id);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -205,8 +210,8 @@ namespace acquizapi.Controllers
                     return BadRequest("No authority to delete plan");
                 }
 
-                queryString = @"INSERT INTO [dbo].[useraward] ([userid],[adate],[award],[planid],[qid],[used])
-                    VALUES(@userid,@adate,@award,@planid,@qid, @used);
+                queryString = @"INSERT INTO [dbo].[useraward] ([userid],[adate],[award],[planid],[qid],[used], [publish])
+                    VALUES(@userid,@adate,@award,@planid,@qid, @used, @publish);
                     SELECT @Identity = SCOPE_IDENTITY();";
 
                 cmd = new SqlCommand(queryString, conn);
@@ -225,6 +230,10 @@ namespace acquizapi.Controllers
                     cmd.Parameters.AddWithValue("@used", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@used", vm.UsedReason);
+                if (vm.Publish.HasValue)
+                    cmd.Parameters.AddWithValue("@publish", vm.Publish.Value);
+                else
+                    cmd.Parameters.AddWithValue("@publish", DBNull.Value);
                 SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
                 idparam.Direction = ParameterDirection.Output;
 
@@ -314,6 +323,7 @@ namespace acquizapi.Controllers
                         ,[planid] = @planid
                         ,[qid] = @qid
                         ,[used] = @used
+                        ,[publish] = @publish
                     WHERE [aid] = @aid;";
 
                 cmd = new SqlCommand(queryString, conn);
@@ -332,6 +342,10 @@ namespace acquizapi.Controllers
                     cmd.Parameters.AddWithValue("@used", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@used", vm.UsedReason);
+                if (vm.Publish.HasValue)
+                    cmd.Parameters.AddWithValue("@publish", vm.Publish.Value);
+                else
+                    cmd.Parameters.AddWithValue("@publish", DBNull.Value);
                 cmd.Parameters.AddWithValue("@aid", id);
 
                 Int32 nRst = await cmd.ExecuteNonQueryAsync();
