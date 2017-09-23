@@ -18,7 +18,7 @@ namespace acquizapi.Controllers
     {
         // GET: api/quiz
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery]String usrid, DateTime? dtBegin = null, DateTime? dtEnd = null)
         {
             List<Quiz> listRst = new List<Quiz>();
             Boolean bError = false;
@@ -28,11 +28,53 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [quizid],[quiztype],[basicinfo],[attenduser],[submitdate] FROM [dbo].[quiz] ORDER BY [quizid] ASC;
+                String queryString = String.Empty;
+                SqlDataReader reader = null;
+                if (String.IsNullOrEmpty(usrid))
+                {
+                    queryString = @"SELECT [quizid],[quiztype],[basicinfo],[attenduser],[submitdate] FROM [dbo].[quiz] ORDER BY [quizid] ASC;
                                 SELECT [quizid],[failidx],[expected],[inputted] FROM [dbo].[quizfaillog] ORDER BY [quizid] ASC;
                                 SELECT [quizid],[section],[timespent],[totalitems],[faileditems] FROM [dbo].[quizsection] ORDER BY [quizid] ASC;";
 
-                this.GetDBResult(queryString, conn, null, listRst);
+                    SqlCommand cmd = new SqlCommand(queryString, conn);
+                    reader = await cmd.ExecuteReaderAsync();
+                }
+                else
+                {
+                    if (dtBegin.HasValue && dtEnd.HasValue)
+                    {
+                        queryString = @"SELECT [quizid],[quiztype],[basicinfo],[attenduser],[submitdate] FROM [quiz] WHERE [attenduser] = @usrid AND [submitdate] <= @enddate AND [submitdate] >= @begindate ORDER BY [quizid] ASC;"
+                                    + @"SELECT [quizfaillog].[quizid],[failidx],[expected],[inputted] FROM [quizfaillog] INNER JOIN [quiz] ON [quizfaillog].[quizid] = [quiz].[quizid] WHERE [quiz].[attenduser] = @usrid AND [quiz].[submitdate] <= @enddate AND [quiz].[submitdate] >= @begindate ORDER BY [quizfaillog].[quizid] ASC;"
+                                    + @"SELECT [quizsection].[quizid],[section],[timespent],[totalitems],[faileditems] FROM [quizsection] INNER JOIN [quiz] ON [quizsection].[quizid] = [quiz].[quizid] WHERE [quiz].[attenduser] = @usrid AND [quiz].[submitdate] <= @enddate AND [quiz].[submitdate] >= @begindate ORDER BY [quizsection].[quizid] ASC;";
+                        SqlCommand cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@usrid", usrid);
+                        cmd.Parameters.AddWithValue("@begindate", dtBegin.Value);
+                        cmd.Parameters.AddWithValue("@enddate", dtEnd.Value);
+                        reader = await cmd.ExecuteReaderAsync();
+                    }
+                    else if (dtBegin.HasValue && !dtEnd.HasValue)
+                    {
+                        queryString = @"SELECT [quizid],[quiztype],[basicinfo],[attenduser],[submitdate] FROM [quiz] WHERE [attenduser] = @usrid AND [submitdate] >= @begindate ORDER BY [quizid] ASC;"
+                                    + @"SELECT [quizfaillog].[quizid],[failidx],[expected],[inputted] FROM [quizfaillog] INNER JOIN [quiz] ON [quizfaillog].[quizid] = [quiz].[quizid] WHERE [quiz].[attenduser] = @usrid AND [quiz].[submitdate] >= @begindate ORDER BY [quizfaillog].[quizid] ASC;"
+                                    + @"SELECT [quizsection].[quizid],[section],[timespent],[totalitems],[faileditems] FROM [quizsection] INNER JOIN [quiz] ON [quizsection].[quizid] = [quiz].[quizid] WHERE [quiz].[attenduser] = @usrid AND [quiz].[submitdate] >= @begindate ORDER BY [quizsection].[quizid] ASC;";
+                        SqlCommand cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@usrid", usrid);
+                        cmd.Parameters.AddWithValue("@begindate", dtBegin.Value);
+                        reader = await cmd.ExecuteReaderAsync();
+                    }
+                    else
+                    {
+                        queryString = @"SELECT [quizid],[quiztype],[basicinfo],[attenduser],[submitdate] FROM [quiz] WHERE [attenduser] = @usrid ORDER BY [quizid] ASC;"
+                                    + @"SELECT [quizfaillog].[quizid],[failidx],[expected],[inputted] FROM [quizfaillog] INNER JOIN [quiz] ON [quizfaillog].[quizid] = [quiz].[quizid] WHERE [quiz].[attenduser] = @usrid ORDER BY [quizfaillog].[quizid] ASC;"
+                                    + @"SELECT [quizsection].[quizid],[section],[timespent],[totalitems],[faileditems] FROM [quizsection] INNER JOIN [quiz] ON [quizsection].[quizid] = [quiz].[quizid] WHERE [quiz].[attenduser] = @usrid ORDER BY [quizsection].[quizid] ASC;";
+                        SqlCommand cmd = new SqlCommand(queryString, conn);
+                        cmd.Parameters.AddWithValue("@usrid", usrid);
+                        reader = await cmd.ExecuteReaderAsync();
+                    }
+                }
+
+
+                this.GetDBResult(reader, listRst);
             }
             catch (Exception exp)
             {
@@ -61,7 +103,7 @@ namespace acquizapi.Controllers
         }
 
         // GET: api/quiz/5
-        [HttpGet("{id}", Name = "Get")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
             List<Quiz> listRst = new List<Quiz>();
@@ -77,7 +119,11 @@ namespace acquizapi.Controllers
                                 SELECT [quizid],[failidx],[expected],[inputted] FROM [dbo].[quizfaillog] WHERE [quizid] = @qid;
                                 SELECT [quizid],[section],[timespent],[totalitems],[faileditems] FROM [dbo].[quizsection] WHERE [quizid] = @qid;";
 
-                this.GetDBResult(queryString, conn, id, listRst);
+                SqlCommand cmd = new SqlCommand(queryString, conn);
+                cmd.Parameters.AddWithValue("@qid", id);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                this.GetDBResult(reader, listRst);
             }
             catch (Exception exp)
             {
@@ -329,15 +375,8 @@ namespace acquizapi.Controllers
         }
 
         // Get DB result via SQL
-        private void GetDBResult(String queryString, SqlConnection conn, Int32? id, List<Quiz> listRst)
+        private void GetDBResult(SqlDataReader reader, List<Quiz> listRst)
         {
-            SqlCommand cmd = new SqlCommand(queryString, conn);
-            if (id.HasValue)
-            {
-                cmd.Parameters.AddWithValue("@qid", id);
-            }
-            SqlDataReader reader = cmd.ExecuteReader();
-
             Int32 nRstBatch = 0;
             if (nRstBatch == 0)
             {
@@ -353,7 +392,7 @@ namespace acquizapi.Controllers
                         if (!reader.IsDBNull(2))
                         {
                             qz.BasicInfo = reader.GetString(2);
-                        }                        
+                        }
                         qz.AttendUser = reader.GetString(3);
                         qz.SubmitDate = reader.GetDateTime(4);
                         listRst.Add(qz);
