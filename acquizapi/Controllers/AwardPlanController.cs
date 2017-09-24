@@ -18,7 +18,7 @@ namespace acquizapi.Controllers
     {
         // GET: api/AwardPlan
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] String tgtuser = null, [FromQuery]String crtedby = null)
+        public async Task<IActionResult> Get([FromQuery] String tgtuser = null, [FromQuery]String crtedby = null, [FromQuery]Boolean incInvalid = false)
         {
             List<AwardPlan> listRst = new List<AwardPlan>();
             Boolean bError = false;
@@ -42,6 +42,19 @@ namespace acquizapi.Controllers
                     queryString += " WHERE [tgtuser] = N'" + tgtuser + "' AND [createdby] = N'" + crtedby + "'";
                 }
 
+                if (!incInvalid)
+                {
+                    if (!String.IsNullOrEmpty(crtedby) || !String.IsNullOrEmpty(tgtuser))
+                    {
+                        queryString += " AND ";
+                    }
+                    else
+                    {
+                        queryString += " WHERE ";
+                    }
+
+                    queryString += " [validfrom] <= GETDATE() AND [validto] >= GETDATE() ";
+                }
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
