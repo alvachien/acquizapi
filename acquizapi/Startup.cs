@@ -23,29 +23,41 @@ namespace acquizapi
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
-
-            Configuration = builder.Build();
+            Configuration = configuration;
         }
 
-        public IConfigurationRoot Configuration { get; }
+        public IConfiguration Configuration { get; }
         internal static String DBConnectionString { get; private set; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
             services.AddCors();
 
+            // Add framework services.
             services.AddMvcCore()
+                .AddAuthorization()
                 .AddJsonFormatters()
-                ;
+                .AddAuthorization();
+
+            services.AddAuthentication("Bearer")
+                .AddIdentityServerAuthentication(options =>
+                {
+#if DEBUG
+                    options.Authority = "http://localhost:41016";
+#else
+#if USE_MICROSOFTAZURE
+                    options.Authority = "http://acidserver.azurewebsites.net";
+#elif USE_ALIYUN
+                    options.Authority = "http://118.178.58.187:5100/";
+#endif
+#endif
+                    options.RequireHttpsMetadata = false;
+                    options.ApiName = "api.acquiz";
+                    //options.AutomaticAuthenticate = true;
+                    //options.AutomaticChallenge = true;
+                });
 
 #if DEBUG
             DBConnectionString = Configuration.GetConnectionString("DebugConnection");
@@ -54,11 +66,9 @@ namespace acquizapi
 #endif
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
+            app.UseAuthentication();
 
             app.UseCors(builder =>
 #if DEBUG
@@ -66,7 +76,8 @@ namespace acquizapi
                     "http://localhost:20000", // AC math exercies
                     "https://localhost:20000"
                     )
-#elif USE_MICROSOFTAZURE
+#else
+#if USE_MICROSOFTAZURE
                 builder.WithOrigins(
                     "http://acmathexercise.azurewebsites.net",
                     "https://acmathexercise.azurewebsites.net"
@@ -77,27 +88,11 @@ namespace acquizapi
                     "https://118.178.58.187:5230"
                     )
 #endif
+#endif
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials()
                 );
-
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
-            {
-#if DEBUG
-                Authority = "http://localhost:41016",
-#elif USE_MICROSOFTAZURE
-                Authority = "http://acidserver.azurewebsites.net",
-#elif USE_ALIYUN
-                Authority = "http://118.178.58.187:5100",
-#endif
-                RequireHttpsMetadata = false,
-
-                AllowedScopes = { "api.acquiz" },
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true
-            });
 
             app.UseMvc();
         }
