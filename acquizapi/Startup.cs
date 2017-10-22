@@ -1,11 +1,11 @@
 ﻿
-#if DEBUG
-#undef USE_ALIYUN
-#undef USE_MICROSOFTAZURE
-#elif RELEASE
-#undef DEBUG
+#if RELEASE
 //#define USE_MICROSOFTAZURE
 #define USE_ALIYUN
+#else
+#define DEBUG
+#undef USE_ALIYUN
+#undef USE_MICROSOFTAZURE
 #endif
 
 using System;
