@@ -1,11 +1,12 @@
 ﻿
 #if RELEASE
-//#define USE_MICROSOFTAZURE
+//#define USE_AZURE
 #define USE_ALIYUN
+#undef USE_AZURE
 #else
 #define DEBUG
 #undef USE_ALIYUN
-#undef USE_MICROSOFTAZURE
+#undef USE_AZURE
 #endif
 
 using System;
@@ -47,10 +48,10 @@ namespace acquizapi
 #if DEBUG
                     options.Authority = "http://localhost:41016";
 #else
-#if USE_MICROSOFTAZURE
+#if USE_AZURE
                     options.Authority = "http://acidserver.azurewebsites.net";
 #elif USE_ALIYUN
-                    options.Authority = "http://118.178.58.187:5100/";
+                    options.Authority = "http://118.178.58.187:5100";
 #endif
 #endif
                     options.RequireHttpsMetadata = false;
@@ -64,7 +65,7 @@ namespace acquizapi
 #else
 #if USE_ALIYUN
             DBConnectionString = Configuration["ConnectionStrings:AliyunConnection"];
-#elif USE_MICROSOFTAZURE
+#elif USE_AZURE
             DBConnectionString = Configuration["ConnectionStrings:AzureConnection"];
 #endif
 #endif
