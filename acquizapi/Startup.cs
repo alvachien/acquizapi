@@ -60,9 +60,13 @@ namespace acquizapi
                 });
 
 #if DEBUG
-            DBConnectionString = Configuration.GetConnectionString("DebugConnection");
+            DBConnectionString = Configuration["ConnectionStrings:DebugConnection"];
 #else
-            DBConnectionString = Configuration.GetConnectionString("DefaultConnection");
+#if USE_ALIYUN
+            DBConnectionString = Configuration["ConnectionStrings:AliyunConnection"];
+#elif USE_MICROSOFTAZURE
+            DBConnectionString = Configuration["ConnectionStrings:AzureConnection"];
+#endif
 #endif
         }
 
