@@ -288,8 +288,12 @@ namespace acquizapi.Controllers
             }
             finally
             {
-                conn.Close();
-                conn.Dispose();
+                if (conn != null)
+                {
+                    conn.Close();
+                    conn.Dispose();
+                    conn = null;
+                }
             }
 
             if (bError)
