@@ -62,7 +62,7 @@ namespace acquizapi.Controllers
                     {
                         QuizAmountByTypeStatistics qz = new QuizAmountByTypeStatistics
                         {
-                            QuizType = reader.GetInt16(0),
+                            QuizType = (QuizTypeEnum)reader.GetInt16(0),
                             AttendUser = reader.GetString(1),
                             Amount = reader.GetInt32(2)
                         };

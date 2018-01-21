@@ -220,7 +220,7 @@ namespace acquizapi.Controllers
                             ap.CreatedBy = String.Empty;
                         ap.ValidFrom = reader.GetDateTime(3);
                         ap.ValidTo = reader.GetDateTime(4);
-                        ap.QuizType = reader.GetInt16(5);
+                        ap.QuizType = (QuizTypeEnum)reader.GetInt16(5);
                         if (!reader.IsDBNull(6))
                             ap.MinQuizScore = reader.GetInt32(6);
                         if (!reader.IsDBNull(7))
@@ -399,7 +399,7 @@ namespace acquizapi.Controllers
                         Quiz qz = new Quiz
                         {
                             QuizID = reader.GetInt32(0),
-                            QuizType = reader.GetInt16(1)
+                            QuizType = (QuizTypeEnum)reader.GetInt16(1)
                         };
                         if (!reader.IsDBNull(2))
                         {

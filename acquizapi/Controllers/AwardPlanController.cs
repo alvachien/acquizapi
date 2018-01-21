@@ -74,7 +74,7 @@ namespace acquizapi.Controllers
                             ap.CreatedBy = String.Empty;
                         ap.ValidFrom = reader.GetDateTime(3);
                         ap.ValidTo = reader.GetDateTime(4);
-                        ap.QuizType = reader.GetInt16(5);
+                        ap.QuizType = (QuizTypeEnum)reader.GetInt16(5);
                         if (!reader.IsDBNull(6))
                             ap.MinQuizScore = reader.GetInt32(6);
                         if (!reader.IsDBNull(7))
@@ -140,7 +140,7 @@ namespace acquizapi.Controllers
                             objRst.CreatedBy = String.Empty;
                         objRst.ValidFrom = reader.GetDateTime(3);
                         objRst.ValidTo = reader.GetDateTime(4);
-                        objRst.QuizType = reader.GetInt16(5);
+                        objRst.QuizType = (QuizTypeEnum)reader.GetInt16(5);
                         if (!reader.IsDBNull(6))
                             objRst.MinQuizScore = reader.GetInt32(6);
                         if (!reader.IsDBNull(7))

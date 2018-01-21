@@ -6,6 +6,20 @@ using System.ComponentModel.DataAnnotations;
 
 namespace acquizapi.Models
 {
+    public enum QuizTypeEnum: Int16
+    {
+        add         = 1,
+        sub         = 2,
+        multi       = 3,
+        div         = 4,
+        formula     = 5,
+        cal24       = 6,
+        sudou       = 7,
+        typing      = 8,
+        mixedop     = 9,
+        minesweep   = 10
+    }
+
     public sealed class QuizSection
     {
         public Int32 QuizID { get; set; }
@@ -34,7 +48,7 @@ namespace acquizapi.Models
         }
 
         public Int32 QuizID { get; set; }
-        public Int16 QuizType { get; set; }
+        public QuizTypeEnum QuizType { get; set; }
         [StringLength(50)]
         public String BasicInfo { get; set; }
         [StringLength(50)]
@@ -112,7 +126,7 @@ namespace acquizapi.Models
 
     public sealed class QuizAmountByTypeStatistics: QuizAmountStatistics
     {
-        public Int16 QuizType { get; set; }
+        public QuizTypeEnum QuizType { get; set; }
     }
 
     public abstract class QuizItemAmountStatistics
@@ -130,7 +144,7 @@ namespace acquizapi.Models
 
     public sealed class QuizItemAmountByTypeStatistics: QuizItemAmountStatistics
     {
-        public Int16 QuizType { get; set; }
+        public QuizTypeEnum QuizType { get; set; }
     }
 
     public sealed class QuizAttendUser
@@ -167,7 +181,7 @@ namespace acquizapi.Models
         [Required]
         public DateTime ValidTo { get; set; }
         [Required]
-        public Int16 QuizType { get; set; }
+        public QuizTypeEnum QuizType { get; set; }
         public Int32? MinQuizScore { get; set; }
         public Int32? MinQuizAvgTime { get; set; }
         [Required]
@@ -185,7 +199,7 @@ namespace acquizapi.Models
         [Required]
         public Int32 Award { get; set; }
         public Int32? AwardPlanID { get; set; }
-        public Int16? QuizType { get; set; }
+        public QuizTypeEnum? QuizType { get; set; }
         public Int32? QuizID { get; set; }
         [StringLength(50)]
         public String UsedReason { get; set; }

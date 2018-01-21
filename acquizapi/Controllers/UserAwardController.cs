@@ -90,7 +90,7 @@ namespace acquizapi.Controllers
             else
                 ua.AwardPlanID = null;
             if (!reader.IsDBNull(5))
-                ua.QuizType = reader.GetInt16(5);
+                ua.QuizType = (QuizTypeEnum)reader.GetInt16(5);
             else
                 ua.QuizType = null;
             if (!reader.IsDBNull(6))
