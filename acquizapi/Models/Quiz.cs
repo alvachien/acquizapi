@@ -203,6 +203,6 @@ namespace acquizapi.Models
         public Int32? QuizID { get; set; }
         [StringLength(50)]
         public String UsedReason { get; set; }
-        public Boolean? Publish { get; set; }
+        public Boolean? Punish { get; set; }
     }
 }

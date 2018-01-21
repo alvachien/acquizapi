@@ -30,9 +30,14 @@ namespace acquizapi.Controllers
                 await conn.OpenAsync();
                 String queryString = @"SELECT [aid],[userid],[adate],[award],[planid],[quiztype],[qid],[used],[publish] FROM [dbo].[v_useraward] ";
                 if (!String.IsNullOrEmpty(userid))
-                {
                     queryString += " WHERE [userid] = N'" + userid + "'";
+                else
+                {
+                    var usro = User.FindFirst(c => c.Type == "sub");
+                    var usrName = usro.Value;
+                    queryString += " WHERE [userid] = N'" + usrName + "'";
                 }
+                queryString += @" ORDER BY [adate] DESC";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -102,9 +107,9 @@ namespace acquizapi.Controllers
             else
                 ua.UsedReason = String.Empty;
             if (!reader.IsDBNull(8))
-                ua.Publish = reader.GetBoolean(8);
+                ua.Punish = reader.GetBoolean(8);
             else
-                ua.Publish = null;
+                ua.Punish = null;
             return ua;
         }
 
@@ -238,8 +243,8 @@ namespace acquizapi.Controllers
                     cmd.Parameters.AddWithValue("@used", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@used", vm.UsedReason);
-                if (vm.Publish.HasValue)
-                    cmd.Parameters.AddWithValue("@publish", vm.Publish.Value);
+                if (vm.Punish.HasValue)
+                    cmd.Parameters.AddWithValue("@publish", vm.Punish.Value);
                 else
                     cmd.Parameters.AddWithValue("@publish", DBNull.Value);
                 SqlParameter idparam = cmd.Parameters.AddWithValue("@Identity", SqlDbType.Int);
@@ -349,13 +354,13 @@ namespace acquizapi.Controllers
                 if (vm.QuizID.HasValue)
                     cmd.Parameters.AddWithValue("@qid", vm.QuizID);
                 else
-                    cmd.Parameters.AddWithValue("@planid", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@qid", DBNull.Value);
                 if (String.IsNullOrEmpty(vm.UsedReason))
                     cmd.Parameters.AddWithValue("@used", DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("@used", vm.UsedReason);
-                if (vm.Publish.HasValue)
-                    cmd.Parameters.AddWithValue("@publish", vm.Publish.Value);
+                if (vm.Punish.HasValue)
+                    cmd.Parameters.AddWithValue("@publish", vm.Punish.Value);
                 else
                     cmd.Parameters.AddWithValue("@publish", DBNull.Value);
                 cmd.Parameters.AddWithValue("@aid", id);
