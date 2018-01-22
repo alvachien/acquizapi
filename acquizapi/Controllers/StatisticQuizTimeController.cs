@@ -22,7 +22,7 @@ namespace acquizapi.Controllers
             if (String.IsNullOrEmpty(usrid))
                 return BadRequest("User is must!");
 
-            List<QuizSucceedRateStatistics> listRst = new List<QuizSucceedRateStatistics>();
+            List<QuizTimeStatistics> listRst = new List<QuizTimeStatistics>();
 
             Boolean bError = false;
             String strErrMsg = "";
@@ -33,16 +33,14 @@ namespace acquizapi.Controllers
                 await conn.OpenAsync();
 
                 String queryString = @"SELECT quiz.quizid, quiz.quiztype, quiz.submitdate, quiz.attenduser, 
-                    SUM(quizsection.timespent) as timespent, 
-                    SUM(quizsection.totalitems) as totalitems,
-	                SUM(quizsection.faileditems) as faileditems
+                    SUM(quizsection.timespent) as timespent
 	                FROM quiz LEFT OUTER JOIN quizsection
-	                ON quiz.quizid = quizsection.quizid
-	                GROUP BY quiz.quizid, quiz.quiztype, quiz.submitdate, quiz.attenduser WHERE quiz.attenduser = @user ";
+	                ON quiz.quizid = quizsection.quizid WHERE quiz.attenduser = @user ";
                 if (dtBegin.HasValue)
                     queryString += " AND [quiz].[submitdate] >= @begindate ";
                 if (dtEnd.HasValue)
                     queryString += " AND [quiz].[submitdate] <= @enddate ";
+                queryString += @" GROUP BY quiz.quizid, quiz.quiztype, quiz.submitdate, quiz.attenduser;";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@user", usrid);
@@ -84,13 +82,19 @@ namespace acquizapi.Controllers
             return new JsonResult(listRst, setting);
         }
 
-        private void GetDBResult(SqlDataReader reader, List<QuizSucceedRateStatistics> listRst)
+        private void GetDBResult(SqlDataReader reader, List<QuizTimeStatistics> listRst)
         {
             if (reader.HasRows)
             {
                 while (reader.Read())
                 {
-                    QuizSucceedRateStatistics row = new QuizSucceedRateStatistics();
+                    QuizTimeStatistics row = new QuizTimeStatistics();
+                    // QuizID 0
+                    row.QuizType = (QuizTypeEnum)reader.GetInt16(1);
+                    row.SubmitDate = reader.GetDateTime(2);
+                    row.AttendUser = reader.GetString(3);
+                    row.TimeSpent = reader.GetInt32(4);
+                    listRst.Add(row);
 
                 }
             }
