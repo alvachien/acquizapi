@@ -149,18 +149,20 @@ namespace acquizapi.Models
 
     public sealed class QuizSucceedRateStatistics
     {
+        public Int32 QuizID { get; set; }
         public String AttendUser { get; set; }
         public String AttendUserDisplayAs { get; set; }
-        public DateTime SubmitDate { get; set; }
+        //public DateTime SubmitDate { get; set; }
         public QuizTypeEnum QuizType { get; set; }
         public float SucceedRate { get; set; }
     }
 
     public sealed class QuizTimeStatistics
     {
+        public Int32 QuizID { get; set; }
         public String AttendUser { get; set; }
         public String AttendUserDisplayAs { get; set; }
-        public DateTime SubmitDate { get; set; }
+        //public DateTime SubmitDate { get; set; }
         public QuizTypeEnum QuizType { get; set; }
         public float TimeSpent { get; set; }
     }

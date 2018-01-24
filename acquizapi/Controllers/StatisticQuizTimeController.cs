@@ -32,7 +32,7 @@ namespace acquizapi.Controllers
             {
                 await conn.OpenAsync();
 
-                String queryString = @"SELECT quiz.quizid, quiz.quiztype, quiz.submitdate, quiz.attenduser, 
+                String queryString = @"SELECT quiz.quizid, quiz.quiztype, quiz.attenduser, 
                     SUM(quizsection.timespent) as timespent
 	                FROM quiz LEFT OUTER JOIN quizsection
 	                ON quiz.quizid = quizsection.quizid WHERE quiz.attenduser = @user ";
@@ -40,7 +40,7 @@ namespace acquizapi.Controllers
                     queryString += " AND [quiz].[submitdate] >= @begindate ";
                 if (dtEnd.HasValue)
                     queryString += " AND [quiz].[submitdate] <= @enddate ";
-                queryString += @" GROUP BY quiz.quizid, quiz.quiztype, quiz.submitdate, quiz.attenduser;";
+                queryString += @" GROUP BY quiz.quizid, quiz.quiztype, quiz.attenduser;";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@user", usrid);
@@ -89,11 +89,11 @@ namespace acquizapi.Controllers
                 while (reader.Read())
                 {
                     QuizTimeStatistics row = new QuizTimeStatistics();
-                    // QuizID 0
+                    row.QuizID = reader.GetInt32(0);
                     row.QuizType = (QuizTypeEnum)reader.GetInt16(1);
-                    row.SubmitDate = reader.GetDateTime(2);
-                    row.AttendUser = reader.GetString(3);
-                    row.TimeSpent = reader.GetInt32(4);
+                    //row.SubmitDate = reader.GetDateTime(2);
+                    row.AttendUser = reader.GetString(2);
+                    row.TimeSpent = reader.GetInt32(3);
                     listRst.Add(row);
 
                 }

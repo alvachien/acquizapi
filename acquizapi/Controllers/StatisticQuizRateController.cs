@@ -32,7 +32,7 @@ namespace acquizapi.Controllers
             {
                 await conn.OpenAsync();
 
-                String queryString = @"SELECT quiz.quizid, quiz.quiztype, quiz.submitdate, quiz.attenduser,                     
+                String queryString = @"SELECT quiz.quizid, quiz.quiztype, quiz.attenduser,                     
                     SUM(quizsection.totalitems) as totalitems,
 	                SUM(quizsection.faileditems) as faileditems
 	                FROM quiz LEFT OUTER JOIN quizsection
@@ -42,7 +42,7 @@ namespace acquizapi.Controllers
                     queryString += " AND [quiz].[submitdate] >= @begindate ";
                 if (dtEnd.HasValue)
                     queryString += " AND [quiz].[submitdate] <= @enddate ";
-                queryString += @" GROUP BY quiz.quizid, quiz.quiztype, quiz.submitdate, quiz.attenduser;";
+                queryString += @" GROUP BY quiz.quizid, quiz.quiztype, quiz.attenduser;";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@user", usrid);
@@ -91,12 +91,12 @@ namespace acquizapi.Controllers
                 while(reader.Read())
                 {
                     QuizSucceedRateStatistics row = new QuizSucceedRateStatistics();
-                    // QuizID 0
+                    row.QuizID = reader.GetInt32(0);
                     row.QuizType = (QuizTypeEnum)reader.GetInt16(1);
-                    row.SubmitDate = reader.GetDateTime(2);
-                    row.AttendUser = reader.GetString(3);
-                    var totalItems = reader.GetInt32(4);
-                    var failedItems = reader.GetInt32(5);
+                    //row.SubmitDate = reader.GetDateTime(2);
+                    row.AttendUser = reader.GetString(2);
+                    var totalItems = reader.GetInt32(3);
+                    var failedItems = reader.GetInt32(4);
                     if (totalItems == 0)
                         row.SucceedRate = 100;
                     else 
