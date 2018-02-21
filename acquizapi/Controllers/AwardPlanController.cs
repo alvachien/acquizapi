@@ -106,7 +106,7 @@ namespace acquizapi.Controllers
                 DateFormatString = "yyyy-MM-dd",
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
             };
-            ;
+            
             return new JsonResult(listRst, setting);
         }
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace acquizapi.Models
 {
-    public class ChineseChessPosition: ICloneable, IComparable<ChineseChessPosition>
+    public sealed class ChineseChessPosition: ICloneable, IComparable<ChineseChessPosition>
     {
         public Int32 Row { get; set; }
         public Int32 Column { get; set; }
@@ -42,14 +42,17 @@ namespace acquizapi.Models
             if (obj.Row == Row && obj.Column == Column)
                 return 0;
 
-            return obj.Row - Row;
+            if (obj.Row != this.Row)
+                return obj.Row - Row;
+
+            return obj.Column - this.Column;
         }
     }
 
     public class ChineseChessPiece: ICloneable
     {
         public string Name { get; set; }
-        public ChineseChessPosition Position { get; private set; }
+        public ChineseChessPosition Position { get; set; }
 
         public ChineseChessPiece(String name = null, Int32? row = null, Int32? column = null)
         {
@@ -83,7 +86,7 @@ namespace acquizapi.Models
 
     public class ChineseChessGame
     {
-        public static List<ChineseChessPiece> GetRedPieces()
+        public static List<ChineseChessPiece> GetInitRedPieces()
         {
             List<ChineseChessPiece> listPieces = new List<ChineseChessPiece>();
             listPieces.Add(new ChineseChessPiece("j1", 1, 1));
@@ -106,7 +109,7 @@ namespace acquizapi.Models
             return listPieces;
         }
 
-        public static List<ChineseChessPiece> GetBlackPieces()
+        public static List<ChineseChessPiece> GetInitBlackPieces()
         {
             List<ChineseChessPiece> listPieces = new List<ChineseChessPiece>();
             listPieces.Add(new ChineseChessPiece("j1", 10, 1));
@@ -128,5 +131,50 @@ namespace acquizapi.Models
 
             return listPieces;
         }
+    }
+
+
+    public class ChineseChessAgent
+    {
+
+    }
+
+    // Interface between webapp and webapi
+    public class ChineseChessAIMove
+    {
+        public string Name { get; set; }
+        public ChineseChessPosition Position { get; set; }
+    }
+    public class ChineseChessAIInputAgent
+    {
+        public Int16 AIStrategy { get; set; }
+        public Int16 Depth { get; set; }
+        public List<ChineseChessAIMove> PastMovements { get; private set; }
+        public Int16 Team { get; set; }
+        public List <ChineseChessPiece> MyPieces { get; private set; }
+        public List<Int32> Weights { get; set; }
+        public List<Int32> FeatureMatrix { get; set; }
+
+        public ChineseChessAIInputAgent()
+        {
+            this.PastMovements = new List<ChineseChessAIMove>();
+            this.MyPieces = new List<ChineseChessPiece>();
+        }
+    }
+
+    public class ChineseChessAIInput
+    {
+        public Boolean EndFlag { get; set; }
+        public ChineseChessAIInputAgent BlackAgent { get; set; }
+        public ChineseChessAIInputAgent RedAgent { get; set; }
+        public Int32 PlayingTeam { get; set; }
+    }
+
+    public class ChineseChessAIOutput
+    {
+        public ChineseChessPiece CurrentPiece { get; set; }
+        public ChineseChessPosition NewPosition { get; set; }
+        public Int32 TickCount { get; set; }
+        public List<Int32> StateFeature { get; set; }
     }
 }
