@@ -136,7 +136,13 @@ namespace acquizapi.Models
 
     public class ChineseChessAgent
     {
-
+        public Int16 Team { get; set; }
+        public Dictionary<String, ChineseChessPosition> LegalMoves { get; set; }
+        public List<ChineseChessPiece> MyPieces { get; set; }
+        public List<ChineseChessPiece> OppoPieces { get; set; }
+        public ChineseChessAgent OppoAgent { get; set; }
+        public Dictionary<String, ChineseChessPosition> MyPiecesDic { get; set; }
+        public Dictionary<String, Boolean> BoardState { get; set; }
     }
 
     // Interface between webapp and webapi
