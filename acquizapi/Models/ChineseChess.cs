@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace acquizapi.Models
 {
+    // Position
     public sealed class ChineseChessPosition: ICloneable, IComparable<ChineseChessPosition>, IEquatable<ChineseChessPosition>
     {
         public Int32 Row { get; set; }
@@ -54,6 +55,7 @@ namespace acquizapi.Models
         }
     }
 
+    // Piece
     public class ChineseChessPiece: ICloneable
     {
         public string Name { get; set; }
@@ -89,6 +91,7 @@ namespace acquizapi.Models
         }
     }
 
+    // Game
     public class ChineseChessGame
     {
         public static List<ChineseChessPiece> GetInitRedPieces()
@@ -136,6 +139,65 @@ namespace acquizapi.Models
 
             return listPieces;
         }
+
+        // Has piece on rows
+        public static Boolean HasPieceOnRows(Int32 col, Int32 minRow, Int32 maxRow, Dictionary<ChineseChessPosition, ChineseChessPiece> boardState)
+        {
+            for (var i = minRow; i <= maxRow; i++)
+            {
+                if (boardState.ContainsKey(new ChineseChessPosition() { Row = i, Column = col }))
+                    return true;
+            }
+
+            return false;
+        }
+
+        // Number of peices on rows
+        public static Int32 NumberOfPiecesOnRows(Int32 col, Int32 minRow, Int32 maxRow, Dictionary<ChineseChessPosition, ChineseChessPiece> boardState)
+        {
+            var r = 0;
+            for (var i = minRow; i <= maxRow; i++)
+            {
+                if (boardState.ContainsKey(new ChineseChessPosition() { Row = i, Column = col }))
+                    ++r;
+            }
+
+            return r;
+        }
+
+        public static ChineseChessStatusEnum? GetGameEndStatus(ChineseChessAgent agent)
+        {
+            var myPieces = agent.MyPieces;
+            var oppoPieces = agent.OppoPieces;
+            var boardState = agent.BoardState;
+            return GetGameEndStatusByState(myPieces, oppoPieces, boardState, agent.Team);
+        }
+
+        private static ChineseChessStatusEnum? GetGameEndStatusByState(List<ChineseChessPiece> myPieces, 
+            List<ChineseChessPiece> oppoPieces, 
+            Dictionary<ChineseChessPosition, ChineseChessPiece> boardState, 
+            short team)
+        {
+            var myKing = myPieces.Find(x => x.Name == "k");
+            var oppoKing = oppoPieces.Find(x => x.Name == "K");
+            if (myKing == null) return ChineseChessStatusEnum.Lose;
+            if (oppoKing == null) return ChineseChessStatusEnum.Win;
+            if (myKing.Position.Column != oppoKing.Position.Column) return ChineseChessStatusEnum.Draw;
+
+            Int32 minRow = -1, maxRow = -1;
+            if (team == 1)
+            {
+                minRow = myKing.Position.Row + 1;
+                maxRow = oppoKing.Position.Row - 1;
+            }
+            else
+            {
+                minRow = oppoKing.Position.Row + 1;
+                maxRow = myKing.Position.Row - 1;
+            }
+            if (HasPieceOnRows(myKing.Position.Column, minRow, maxRow, boardState)) return ChineseChessStatusEnum.Draw;
+            return ChineseChessStatusEnum.Win;
+        }
     }
 
 
@@ -147,7 +209,33 @@ namespace acquizapi.Models
         public List<ChineseChessPiece> OppoPieces { get; set; }
         public ChineseChessAgent OppoAgent { get; set; }
         public Dictionary<String, ChineseChessPosition> MyPiecesDic { get; set; }
-        public Dictionary<String, Boolean> BoardState { get; set; }
+        public Dictionary<ChineseChessPosition, ChineseChessPiece> BoardState { get; set; }
+    }
+
+    public enum ChineseChessStatusEnum
+    {
+        Win = 1,
+        Lose = -1,
+        Draw = 0
+    }
+
+    public class ChineseChessState
+    {
+        public ChineseChessAgent RedAgent { get; set; }
+        public ChineseChessAgent BlackAgent { get; set; }
+        public Int16 PlayingTeam { get; set; }
+        public Boolean EndFlag { get; set; }
+
+        public void SwitchTurn()
+        {
+            this.PlayingTeam *= -1;
+        }
+
+        public ChineseChessStatusEnum? GetEndStatus()
+        {
+            var playing = this.PlayingTeam == 1 ? this.RedAgent : this.BlackAgent;
+            return ChineseChessGame.GetGameEndStatus(playing);
+        }
     }
 
     // Interface between webapp and webapi
