@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace acquizapi.Models
 {
-    public sealed class ChineseChessPosition: ICloneable, IComparable<ChineseChessPosition>
+    public sealed class ChineseChessPosition: ICloneable, IComparable<ChineseChessPosition>, IEquatable<ChineseChessPosition>
     {
         public Int32 Row { get; set; }
         public Int32 Column { get; set; }
@@ -46,6 +46,11 @@ namespace acquizapi.Models
                 return obj.Row - Row;
 
             return obj.Column - this.Column;
+        }
+
+        public bool Equals(ChineseChessPosition other)
+        {
+            return other.Row == this.Row && other.Column == this.Column;
         }
     }
 
