@@ -165,6 +165,120 @@ namespace acquizapi.Models
             return r;
         }
 
+        public static List<ChineseChessPosition> FilterBoundedMoves(Int32 curRow, Int32 curCol, 
+            List<ChineseChessPosition> possMoves, 
+            Dictionary<ChineseChessPosition, Boolean> boardState)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            foreach (var pos in possMoves)
+            {
+                if ( (pos.Row != curRow) || (pos.Column != curCol)
+                    && pos.Row >= ChineseChessPosition.MinimumRow
+                    && pos.Row <= ChineseChessPosition.MaximumRow
+                    && pos.Column >= ChineseChessPosition.MinimumColumn
+                    && pos.Column <= ChineseChessPosition.MaximumColumn
+                    && !(boardState.ContainsKey(pos) && boardState[pos]))
+                {
+                    listMoves.Add(pos);
+                }
+            }
+
+            return listMoves;
+        }
+
+        public static void FindFirstOpponentOnRow(Int32 curRow, Int32 startCol, Dictionary<ChineseChessPosition, Boolean> boardStates)
+        {
+
+        }
+
+
+        public static List<ChineseChessPosition> MovesOnSameLine(Int32 curRow,
+            Int32 curCol, Dictionary<ChineseChessPosition, Boolean> boardStates)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+
+            for(Int32 i = curRow + 1; i <= ChineseChessPosition.MaximumRow; i++)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = i, Column = curRow };
+                if (boardStates.ContainsKey(pos))
+                {
+                    if (!boardStates[pos])
+                        listMoves.Add(pos);
+                    break;
+                }
+                listMoves.Add(pos);
+            }
+            for(Int32 j = curRow - 1; j >= ChineseChessPosition.MinimumRow; j --)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = j, Column = curCol };
+                if (boardStates.ContainsKey(pos))
+                {
+                    if (!boardStates[pos])
+                        listMoves.Add(pos);
+                    break;
+                }
+                listMoves.Add(pos);
+            }
+            for (Int32 i = curCol + 1; i <= ChineseChessPosition.MaximumColumn; i ++)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = curRow, Column = i };
+                if (boardStates.ContainsKey(pos))
+                {
+                    if (!boardStates[pos])
+                        listMoves.Add(pos);
+                }
+                listMoves.Add(pos);
+            }
+            for(Int32 j = curCol - 1; j >= ChineseChessPosition.MinimumColumn; j --)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = curRow, Column = j };
+                if (boardStates.ContainsKey(pos))
+                {
+                    if (!boardStates[pos])
+                        listMoves.Add(pos);
+                    break;
+                }
+                listMoves.Add(pos);
+            }
+
+
+            return listMoves;
+        }
+        public static List<ChineseChessPosition> PossibleMovesForJu(Int32 curRow, Int32 curCol, 
+            Dictionary<ChineseChessPosition, Boolean> boardStates)
+        {
+            return MovesOnSameLine(curRow, curCol, boardStates);
+        }
+        public static List<ChineseChessPosition> PossibleMovesForMa(Int32 curRow, Int32 curCol, 
+            Dictionary<ChineseChessPosition, Boolean> boardStates)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            if (boardStates.ContainsKey(new ChineseChessPosition() {  Row = curRow + 1, Column = curCol}))
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 2, Column = curCol + 1 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 2, Column = curCol - 1 });
+            }
+            if (boardStates.ContainsKey(new ChineseChessPosition() { Row = curRow - 1, Column = curCol }))
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 2, Column = curCol + 1 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 2, Column = curCol - 1 });
+            }
+            if (boardStates.ContainsKey(new ChineseChessPosition() { Row = curRow, Column = curCol + 1 }))
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 1, Column = curCol + 2 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 1, Column = curCol + 2 });
+            }
+            if (boardStates.ContainsKey(new ChineseChessPosition() { Row = curRow, Column = curCol - 1 }))
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 1, Column = curCol - 2 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 1, Column = curCol - 2 });
+            }
+
+            return listMoves;
+        }
+
+        // Get game end status
+        // Null: Not end!
         public static ChineseChessStatusEnum? GetGameEndStatus(ChineseChessAgent agent)
         {
             var myPieces = agent.MyPieces;
@@ -182,7 +296,7 @@ namespace acquizapi.Models
             var oppoKing = oppoPieces.Find(x => x.Name == "K");
             if (myKing == null) return ChineseChessStatusEnum.Lose;
             if (oppoKing == null) return ChineseChessStatusEnum.Win;
-            if (myKing.Position.Column != oppoKing.Position.Column) return ChineseChessStatusEnum.Draw;
+            if (myKing.Position.Column != oppoKing.Position.Column) return null;
 
             Int32 minRow = -1, maxRow = -1;
             if (team == 1)
@@ -195,7 +309,10 @@ namespace acquizapi.Models
                 minRow = oppoKing.Position.Row + 1;
                 maxRow = myKing.Position.Row - 1;
             }
-            if (HasPieceOnRows(myKing.Position.Column, minRow, maxRow, boardState)) return ChineseChessStatusEnum.Draw;
+
+            if (HasPieceOnRows(myKing.Position.Column, minRow, maxRow, boardState))
+                return null;
+
             return ChineseChessStatusEnum.Win;
         }
     }
