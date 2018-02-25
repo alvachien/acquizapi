@@ -186,9 +186,75 @@ namespace acquizapi.Models
             return listMoves;
         }
 
-        public static void FindFirstOpponentOnRow(Int32 curRow, Int32 startCol, Dictionary<ChineseChessPosition, Boolean> boardStates)
+        public static ChineseChessPosition FindFirstOpponentOnRow(Int32 curRow, Int32 startCol, 
+            Dictionary<ChineseChessPosition, Boolean> boardStates, Boolean increase)
         {
+            Int32 nCol = startCol;
+            if (increase)
+            {
+                for (; nCol <= ChineseChessPosition.MaximumColumn; nCol++)
+                {
+                    ChineseChessPosition pos = new ChineseChessPosition() { Row = curRow, Column = nCol };
+                    if (boardStates.ContainsKey(pos))
+                    {
+                        if (boardStates[pos])
+                            return null;
+                        else
+                            return pos;
+                    }
+                }
+            }
+            else
+            {
+                for (; nCol >= ChineseChessPosition.MinimumColumn; nCol--)
+                {
+                    ChineseChessPosition pos = new ChineseChessPosition() { Row = curRow, Column = nCol };
+                    if (boardStates.ContainsKey(pos))
+                    {
+                        if (boardStates[pos])
+                            return null;
+                        else
+                            return pos;
+                    }
+                }
+            }
 
+            return null;
+        }
+        public static ChineseChessPosition FindFirstOpponentOnColumn(Int32 curCol, Int32 startRow, 
+            Dictionary<ChineseChessPosition, Boolean> boardStates, Boolean increase)
+        {
+            Int32 nRow = startRow;
+            if (increase)
+            {
+                for (; nRow <= ChineseChessPosition.MaximumRow; nRow++)
+                {
+                    ChineseChessPosition pos = new ChineseChessPosition() { Row = nRow, Column = curCol };
+                    if (boardStates.ContainsKey(pos))
+                    {
+                        if (boardStates[pos])
+                            return null;
+                        else
+                            return pos;
+                    }
+                }
+            }
+            else
+            {
+                for (; nRow >= ChineseChessPosition.MinimumRow; nRow--)
+                {
+                    ChineseChessPosition pos = new ChineseChessPosition() { Row = nRow, Column = curCol};
+                    if (boardStates.ContainsKey(pos))
+                    {
+                        if (boardStates[pos])
+                            return null;
+                        else
+                            return pos;
+                    }
+                }
+            }
+
+            return null;
         }
 
 
@@ -272,6 +338,146 @@ namespace acquizapi.Models
             {
                 listMoves.Add(new ChineseChessPosition() { Row = curRow + 1, Column = curCol - 2 });
                 listMoves.Add(new ChineseChessPosition() { Row = curRow - 1, Column = curCol - 2 });
+            }
+
+            return listMoves;
+        }
+        public static List<ChineseChessPosition> PossibleMovesForPoa(Int32 curRow, Int32 curCol,
+            Dictionary<ChineseChessPosition, Boolean> boardStates)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            for(Int32 i = curRow + 1; i <= ChineseChessPosition.MaximumRow; i++)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = i, Column = curCol };
+                if (boardStates.ContainsKey(pos))
+                {
+                    ChineseChessPosition next = FindFirstOpponentOnColumn(curCol, i + 1, boardStates, true);
+                    if (next != null)
+                        listMoves.Add(next);
+                    break;
+                }
+                listMoves.Add(pos);
+            }
+            for(Int32 j = curRow - 1; j >= ChineseChessPosition.MinimumRow; j --)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = j, Column = curCol };
+                if (boardStates.ContainsKey(pos))
+                {
+                    ChineseChessPosition next = FindFirstOpponentOnColumn(curCol, j - 1, boardStates, false);
+                    if (next != null)
+                        listMoves.Add(next);
+                    break;
+                }
+                listMoves.Add(pos);
+            }
+            for(Int32 i = curCol + 1; i <= ChineseChessPosition.MaximumColumn; i ++)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = curRow, Column = i};
+                if (boardStates.ContainsKey(pos))
+                {
+                    ChineseChessPosition next = FindFirstOpponentOnColumn(curRow, i + 1, boardStates, true);
+                    if (next != null)
+                        listMoves.Add(next);
+                    break;
+                }
+                listMoves.Add(pos);
+            }
+            for (Int32 j = curCol - 1; j >= ChineseChessPosition.MinimumColumn; j --)
+            {
+                ChineseChessPosition pos = new ChineseChessPosition() { Row = curRow, Column = j };
+                if (boardStates.ContainsKey(pos))
+                {
+                    ChineseChessPosition next = FindFirstOpponentOnColumn(curRow, j - 1, boardStates, false);
+                    if (next != null)
+                        listMoves.Add(next);
+                    break;
+                }
+                listMoves.Add(pos);
+            }
+
+            return listMoves;
+        }
+        public static List<ChineseChessPosition> PossibleMovesForShi(Int32 curRow, Int32 curCol, 
+            Dictionary<ChineseChessPosition, Boolean> boardStates, Boolean isLowerTeam)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            if (curRow == 2 || curRow == 9)
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 1, Column = curCol + 1 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 1, Column = curCol - 1 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 1, Column = curCol + 1 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 1, Column = curCol - 1 });
+            }
+            else
+            {
+                listMoves.Add(isLowerTeam ? new ChineseChessPosition() { Row = 2, Column = 5 } 
+                    : new ChineseChessPosition() { Row = 9, Column = 5 });
+            }
+
+            return listMoves;
+        }
+        public static IEnumerable<ChineseChessPosition> PossibleMovesForKing(Int32 curRow, Int32 curCol,
+            Dictionary<ChineseChessPosition, Boolean> boardStates)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            for (Int32 col = 4; col <= 6; col ++)
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow, Column = col });
+            }
+            if (curRow < 5)
+            {
+                for(Int32 row = 1; row <= 3; row ++)
+                {
+                    listMoves.Add(new ChineseChessPosition() { Row = row, Column = curCol });
+                }
+            }
+            else
+            {
+                for (Int32 row = 8; row <= 10; row++)
+                {
+                    listMoves.Add(new ChineseChessPosition() { Row = row, Column = curCol });
+                }
+            }
+
+            foreach(var mov in listMoves)
+            {
+                if ((mov.Row - curRow) * (mov.Row - curRow) + (mov.Column - curRow) * (mov.Column - curCol) < 2)
+                    yield return mov;
+            }
+        }
+        public static List<ChineseChessPosition> PossibleMovesForXiang(Int32 curRow, Int32 curCol,
+            Dictionary<ChineseChessPosition, Boolean> boardStates, Boolean isLowerTeam)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            var canMoveDowward = (isLowerTeam || curRow >= 8);
+            var canMoveUpward = (curRow <= 3 || !isLowerTeam);
+            if (canMoveUpward && !(boardStates.ContainsKey(new ChineseChessPosition() { Row = curRow + 1, Column = curCol + 1 }))) 
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 2, Column = curCol + 2 });
+            if (canMoveUpward && !(boardStates.ContainsKey(new ChineseChessPosition() { Row = curRow + 1, Column = curCol - 1 })))
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 2, Column = curCol - 2 });
+            if (canMoveDowward && !(boardStates.ContainsKey(new ChineseChessPosition() { Row = curRow - 1, Column = curCol + 1 })))
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 2, Column = curCol + 2 });
+            if (canMoveDowward && !(boardStates.ContainsKey(new ChineseChessPosition() { Row = curRow - 1, Column = curCol - 1 })))
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 2, Column = curCol - 2 });
+
+            return listMoves;
+        }
+        public static List<ChineseChessPosition> PossibleMovesForZu(Int32 curRow, Int32 curCol,
+            Dictionary<ChineseChessPosition, Boolean> boardStates, Boolean isLowerTeam)
+        {
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            var beyond = isLowerTeam ? (curRow > 5) : (curRow <= 5); //beyond the river
+            if (isLowerTeam)
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow + 1, Column = curCol});
+            }
+            else
+            {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow - 1, Column = curCol });
+            }
+            if (beyond) {
+                listMoves.Add(new ChineseChessPosition() { Row = curRow, Column = curCol - 1 });
+                listMoves.Add(new ChineseChessPosition() { Row = curRow, Column = curCol + 1 });
             }
 
             return listMoves;
