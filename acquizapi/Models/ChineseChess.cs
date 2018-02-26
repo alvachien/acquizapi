@@ -165,11 +165,10 @@ namespace acquizapi.Models
             return r;
         }
 
-        public static List<ChineseChessPosition> FilterBoundedMoves(Int32 curRow, Int32 curCol, 
+        public static IEnumerable<ChineseChessPosition> FilterBoundedMoves(Int32 curRow, Int32 curCol, 
             List<ChineseChessPosition> possMoves, 
             Dictionary<ChineseChessPosition, Boolean> boardState)
         {
-            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
             foreach (var pos in possMoves)
             {
                 if ( (pos.Row != curRow) || (pos.Column != curCol)
@@ -179,11 +178,9 @@ namespace acquizapi.Models
                     && pos.Column <= ChineseChessPosition.MaximumColumn
                     && !(boardState.ContainsKey(pos) && boardState[pos]))
                 {
-                    listMoves.Add(pos);
+                    yield return pos;
                 }
             }
-
-            return listMoves;
         }
 
         public static ChineseChessPosition FindFirstOpponentOnRow(Int32 curRow, Int32 startCol, 
@@ -256,7 +253,6 @@ namespace acquizapi.Models
 
             return null;
         }
-
 
         public static List<ChineseChessPosition> MovesOnSameLine(Int32 curRow,
             Int32 curCol, Dictionary<ChineseChessPosition, Boolean> boardStates)
@@ -342,7 +338,7 @@ namespace acquizapi.Models
 
             return listMoves;
         }
-        public static List<ChineseChessPosition> PossibleMovesForPoa(Int32 curRow, Int32 curCol,
+        public static List<ChineseChessPosition> PossibleMovesForPao(Int32 curRow, Int32 curCol,
             Dictionary<ChineseChessPosition, Boolean> boardStates)
         {
             List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
@@ -481,6 +477,63 @@ namespace acquizapi.Models
             }
 
             return listMoves;
+        }
+        public static IEnumerable<ChineseChessPosition> PossibleMovesByPiece(ChineseChessPiece piece, 
+            Dictionary<ChineseChessPosition, Boolean> boardStates,
+            Boolean isLowerTeam)
+        {
+            var name = piece.Name;
+            List<ChineseChessPosition> listMoves = new List<ChineseChessPosition>();
+            var curRow = piece.Position.Row;
+            var curCol = piece.Position.Column;
+            switch(name)
+            {
+                case "j":
+                    listMoves = PossibleMovesForJu(curRow, curCol, boardStates);
+                    break;
+
+                case "m":
+                    listMoves = PossibleMovesForMa(curRow, curCol, boardStates);
+                    break;
+
+                case "x":
+                    listMoves = PossibleMovesForXiang(curRow, curCol, boardStates, isLowerTeam);
+                    break;
+
+                case "s":
+                    listMoves = PossibleMovesForShi(curRow, curCol, boardStates, isLowerTeam);
+                    break;
+
+                case "k":
+                    listMoves = PossibleMovesForKing(curRow, curCol, boardStates).ToList<ChineseChessPosition>();
+                    break;
+
+                case "p":
+                    listMoves = PossibleMovesForPao(curRow, curCol, boardStates);
+                    break;
+
+                case "z":
+                    listMoves = PossibleMovesForZu(curRow, curCol, boardStates, isLowerTeam);
+                    break;
+
+                default:
+                    throw new Exception("Unsupported name");
+            }
+
+            return FilterBoundedMoves(curRow, curCol, listMoves, boardStates);
+        }
+        public static Dictionary<String, IEnumerable<ChineseChessPosition>> AllPossibleMoves(List<ChineseChessPiece> listMyPieces, 
+            Dictionary<ChineseChessPosition, bool> boardStates, Int32 team)
+        {
+            var isLowerTeam = (team == 1);
+            Dictionary<String, IEnumerable<ChineseChessPosition>> dictMoves = new Dictionary<string, IEnumerable<ChineseChessPosition>>();
+            foreach (var piece in listMyPieces)
+            {
+                var moves4Piece = PossibleMovesByPiece(piece, boardStates, isLowerTeam);
+                dictMoves.Add(piece.Name, moves4Piece);
+            }
+
+            return dictMoves;
         }
 
         // Get game end status
