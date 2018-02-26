@@ -43,15 +43,15 @@ namespace acquizapi.Models
             if (obj.Row == Row && obj.Column == Column)
                 return 0;
 
-            if (obj.Row != this.Row)
+            if (obj.Row != Row)
                 return obj.Row - Row;
 
-            return obj.Column - this.Column;
+            return obj.Column - Column;
         }
 
         public bool Equals(ChineseChessPosition other)
         {
-            return other.Row == this.Row && other.Column == this.Column;
+            return other.Row == Row && other.Column == Column;
         }
     }
 
@@ -66,11 +66,11 @@ namespace acquizapi.Models
             Position = new ChineseChessPosition();
 
             if (!String.IsNullOrEmpty(name))
-                this.Name = name;
+                Name = name;
             if (row != null)
-                this.Position.Row = row.Value;
+                Position.Row = row.Value;
             if (column != null)
-                this.Position.Column = column.Value;
+                Position.Column = column.Value;
         }
 
         public void MoveToPosition(ChineseChessPosition pos)
@@ -580,12 +580,104 @@ namespace acquizapi.Models
     public class ChineseChessAgent
     {
         public Int16 Team { get; set; }
-        public Dictionary<String, ChineseChessPosition> LegalMoves { get; set; }
+        public Dictionary<String, IEnumerable<ChineseChessPosition>> LegalMoves { get; set; }
         public List<ChineseChessPiece> MyPieces { get; set; }
         public List<ChineseChessPiece> OppoPieces { get; set; }
         public ChineseChessAgent OppoAgent { get; set; }
         public Dictionary<String, ChineseChessPosition> MyPiecesDic { get; set; }
-        public Dictionary<ChineseChessPosition, ChineseChessPiece> BoardState { get; set; }
+        public Dictionary<ChineseChessPosition, Boolean> BoardState { get; set; }
+
+        public ChineseChessAgent(Int16 team, List<ChineseChessPiece> myPieces)
+        {
+            Team = team;
+            if (myPieces != null)
+            {
+                MyPieces = myPieces;
+            }
+            else
+            {
+                MyPieces = (team == 1) ? ChineseChessGame.GetInitRedPieces() : ChineseChessGame.GetInitBlackPieces();
+            }
+
+            BoardState = new Dictionary<ChineseChessPosition, bool>();
+            MyPiecesDic = new Dictionary<string, ChineseChessPosition>();
+        }
+
+        public void SetOppoAgent(ChineseChessAgent oppoAgent)
+        {
+            OppoAgent = oppoAgent;
+            OppoPieces = oppoAgent.MyPieces;
+        }
+
+        public void UpdateState()
+        {
+            UpdateBoardState();
+            UpdatePieceDict();
+            ComputeLegalMoves();
+        }
+
+        public void UpdateBoardState()
+        {
+            BoardState.Clear();
+
+            foreach (var piece in MyPieces)
+            {
+                BoardState.Add(piece.Position, true);
+            }
+            foreach (var piece in OppoPieces)
+            {
+                BoardState.Add(piece.Position, false);
+            }
+        }
+        public void UpdatePieceDict()
+        {
+            foreach(var piece in MyPieces)
+            {
+                MyPiecesDic.Add(piece.Name, piece.Position);
+            }
+        }
+        public void ComputeLegalMoves()
+        {
+            LegalMoves = ChineseChessGame.AllPossibleMoves(MyPieces, BoardState, Team);
+        }
+
+        public void MovePieceTo(ChineseChessPiece piece, ChineseChessPosition pos, Boolean? isCapture)
+        {
+            piece.MoveToPosition(pos);
+
+            Boolean bCap = false;
+            if (isCapture == null)
+            {
+                foreach(var piece2 in OppoPieces)
+                {
+                    if (piece2.Position == pos)
+                    {
+                        bCap = true;
+                        break;
+                    }
+                }
+            }
+
+            if (bCap)
+                CaptureOppoPiece(pos);
+        }
+
+        private void CaptureOppoPiece(ChineseChessPosition pos)
+        {
+            Int32 idx = -1;
+            for(var i = 0; i < OppoPieces.Count; i ++)
+            {
+                if (OppoPieces[i].Position == pos)
+                {
+                    idx = i;
+                    break;
+                }
+            }
+            if (idx != -1)
+            {
+                OppoPieces.RemoveAt(idx);
+            }
+        }
     }
 
     public enum ChineseChessStatusEnum
@@ -604,12 +696,12 @@ namespace acquizapi.Models
 
         public void SwitchTurn()
         {
-            this.PlayingTeam *= -1;
+            PlayingTeam *= -1;
         }
 
         public ChineseChessStatusEnum? GetEndStatus()
         {
-            var playing = this.PlayingTeam == 1 ? this.RedAgent : this.BlackAgent;
+            var playing = PlayingTeam == 1 ? RedAgent : BlackAgent;
             return ChineseChessGame.GetGameEndStatus(playing);
         }
     }
@@ -632,8 +724,8 @@ namespace acquizapi.Models
 
         public ChineseChessAIInputAgent()
         {
-            this.PastMovements = new List<ChineseChessAIMove>();
-            this.MyPieces = new List<ChineseChessPiece>();
+            PastMovements = new List<ChineseChessAIMove>();
+            MyPieces = new List<ChineseChessPiece>();
         }
     }
 
