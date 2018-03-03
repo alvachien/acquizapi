@@ -576,7 +576,6 @@ namespace acquizapi.Models
         }
     }
 
-
     public class ChineseChessAgent
     {
         public Int16 Team { get; set; }
@@ -718,7 +717,7 @@ namespace acquizapi.Models
         public Int16 Depth { get; set; }
         public List<ChineseChessAIMove> PastMovements { get; private set; }
         public Int16 Team { get; set; }
-        public List <ChineseChessPiece> MyPieces { get; private set; }
+        public List<ChineseChessPiece> MyPieces { get; private set; }
         public List<Int32> Weights { get; set; }
         public List<Int32> FeatureMatrix { get; set; }
 

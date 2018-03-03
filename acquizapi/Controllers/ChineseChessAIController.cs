@@ -23,6 +23,52 @@ namespace acquizapi.Controllers
         public async Task<IActionResult> Put([FromBody]ChineseChessAIInput value)
         {
             var output = new ChineseChessAIOutput();
+            var state = new ChineseChessState();
+
+            //if (dict.playingTeam == 1)
+            //{
+            //    var agentDict = dict.redAgent;
+            //    var oppo = dict.blackAgent;
+            //}
+            //else
+            //{
+            //    var agentDict = dict.blackAgent;
+            //    var oppo = dict.redAgent;
+            //}
+            //oppo = Agent.copyFromDict(oppo);
+            //var agent;
+            //// console.log(agentDict.strategy)
+            //var is_repeating = this.check_repeating(agentDict);
+
+            //if (agentDict.strategy == 0) agent = GreedyAgent.copyFromDict(agentDict);
+            //if (agentDict.strategy == 1) agent = ABPruning.copyFromDict(agentDict);
+            //if (agentDict.strategy == 2) agent = Reorder.copyFromDict(agentDict);
+            //if (agentDict.strategy == 3) agent = TDLearner.copyFromDict(agentDict);
+            //if (agentDict.strategy == 4) agent = TDLearnerTrained.copyFromDict(agentDict);
+            //if (agentDict.strategy == 5) agent = MCTS.copyFromDict(agentDict);
+            //var new_state;
+            //if (dict.playingTeam == 1) new_state = new State(agent, oppo, dict.playingTeam);
+            //else new_state = new State(oppo, agent, dict.playingTeam);
+            //new_state.is_repeating = is_repeating;
+            //return new_state;
+
+            state.PlayingTeam = (Int16)value.PlayingTeam;            
+
+            if (value.PlayingTeam == 1)
+            {
+                //state.RedAgent = value.RedAgent;
+                //state.BlackAgent = value.BlackAgent;
+            }
+            else
+            {
+                
+            }
+
+            // Calculate the next move
+            var bgnDate = DateTime.Now;
+
+            var endDate = DateTime.Now;
+            var spentTime = endDate - bgnDate;
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
             {
