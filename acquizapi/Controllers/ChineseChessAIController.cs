@@ -22,6 +22,11 @@ namespace acquizapi.Controllers
         [HttpPut]
         public async Task<IActionResult> Put([FromBody]ChineseChessAIInput value)
         {
+            if (value == null)
+            {
+                return StatusCode(500, "Failed to parse the inputting");
+            }
+
             var output = new ChineseChessAIOutput();
             var state = new ChineseChessState();
 

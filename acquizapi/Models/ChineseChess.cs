@@ -141,7 +141,7 @@ namespace acquizapi.Models
         }
 
         // Has piece on rows
-        public static Boolean HasPieceOnRows(Int32 col, Int32 minRow, Int32 maxRow, Dictionary<ChineseChessPosition, ChineseChessPiece> boardState)
+        public static Boolean HasPieceOnRows(Int32 col, Int32 minRow, Int32 maxRow, Dictionary<ChineseChessPosition, Boolean> boardState)
         {
             for (var i = minRow; i <= maxRow; i++)
             {
@@ -153,7 +153,7 @@ namespace acquizapi.Models
         }
 
         // Number of peices on rows
-        public static Int32 NumberOfPiecesOnRows(Int32 col, Int32 minRow, Int32 maxRow, Dictionary<ChineseChessPosition, ChineseChessPiece> boardState)
+        public static Int32 NumberOfPiecesOnRows(Int32 col, Int32 minRow, Int32 maxRow, Dictionary<ChineseChessPosition, Boolean> boardState)
         {
             var r = 0;
             for (var i = minRow; i <= maxRow; i++)
@@ -548,7 +548,7 @@ namespace acquizapi.Models
 
         private static ChineseChessStatusEnum? GetGameEndStatusByState(List<ChineseChessPiece> myPieces, 
             List<ChineseChessPiece> oppoPieces, 
-            Dictionary<ChineseChessPosition, ChineseChessPiece> boardState, 
+            Dictionary<ChineseChessPosition, Boolean> boardState, 
             short team)
         {
             var myKing = myPieces.Find(x => x.Name == "k");
@@ -713,9 +713,9 @@ namespace acquizapi.Models
     }
     public class ChineseChessAIInputAgent
     {
-        public Int16 AIStrategy { get; set; }
+        public Int16 Strategy { get; set; }
         public Int16 Depth { get; set; }
-        public List<ChineseChessAIMove> PastMovements { get; private set; }
+        public List<ChineseChessAIMove> PastMoves { get; private set; }
         public Int16 Team { get; set; }
         public List<ChineseChessPiece> MyPieces { get; private set; }
         public List<Int32> Weights { get; set; }
@@ -723,17 +723,23 @@ namespace acquizapi.Models
 
         public ChineseChessAIInputAgent()
         {
-            PastMovements = new List<ChineseChessAIMove>();
+            PastMoves = new List<ChineseChessAIMove>();
             MyPieces = new List<ChineseChessPiece>();
         }
     }
 
     public class ChineseChessAIInput
     {
-        public Boolean EndFlag { get; set; }
+        public Boolean? EndFlag { get; set; }
         public ChineseChessAIInputAgent BlackAgent { get; set; }
         public ChineseChessAIInputAgent RedAgent { get; set; }
         public Int32 PlayingTeam { get; set; }
+
+        public ChineseChessAIInput()
+        {
+            this.BlackAgent = new ChineseChessAIInputAgent();
+            this.RedAgent = new ChineseChessAIInputAgent();
+        }
     }
 
     public class ChineseChessAIOutput
