@@ -709,7 +709,12 @@ namespace acquizapi.Models
     public class ChineseChessAIMove
     {
         public string Name { get; set; }
-        public ChineseChessPosition Position { get; set; }
+        public List<Int32> Position { get; set; }
+
+        public ChineseChessAIMove()
+        {
+            this.Position = new List<int>();
+        }
     }
     public class ChineseChessAIInputAgent
     {
