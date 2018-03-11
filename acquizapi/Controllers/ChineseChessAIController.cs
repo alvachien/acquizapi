@@ -41,6 +41,57 @@ namespace acquizapi.Controllers
             var output = new ChineseChessAIOutput();
             var state = new ChineseChessState();
 
+            if (value.PlayingTeam == 1)
+            {
+                // Red
+                // Oppo is black
+                var agent = value.RedAgent;
+                var oppoagent = value.BlackAgent;
+
+                List<ChineseChessPiece> myPieces = new List<ChineseChessPiece>();
+                foreach(var pc in agent.MyPieces)
+                {
+                    var cpc = new ChineseChessPiece(pc.Name, pc.Position[0], pc.Position[1]);
+                    myPieces.Add(cpc);
+                }
+                ChineseChessAgent realagent = new ChineseChessAgent(1, myPieces);
+                state.RedAgent = realagent;
+
+                myPieces.Clear();
+                foreach(var pc in oppoagent.MyPieces)
+                {
+                    var cpc = new ChineseChessPiece(pc.Name, pc.Position[0], pc.Position[1]);
+                    myPieces.Add(cpc);
+                }
+                realagent = new ChineseChessAgent(-1, myPieces);
+                state.BlackAgent = realagent;                
+            }
+            else if (value.PlayingTeam == -1)
+            {
+                // Black
+                // Oppo is red
+                var agent = value.BlackAgent;
+                var oppoagent = value.RedAgent;
+
+                List<ChineseChessPiece> myPieces = new List<ChineseChessPiece>();
+                foreach (var pc in agent.MyPieces)
+                {
+                    var cpc = new ChineseChessPiece(pc.Name, pc.Position[0], pc.Position[1]);
+                    myPieces.Add(cpc);
+                }
+                ChineseChessAgent realagent = new ChineseChessAgent(1, myPieces);
+                state.BlackAgent = realagent;
+
+                myPieces.Clear();
+                foreach (var pc in oppoagent.MyPieces)
+                {
+                    var cpc = new ChineseChessPiece(pc.Name, pc.Position[0], pc.Position[1]);
+                    myPieces.Add(cpc);
+                }
+                realagent = new ChineseChessAgent(-1, myPieces);
+                state.RedAgent = realagent;
+            }
+
             //if (dict.playingTeam == 1)
             //{
             //    var agentDict = dict.redAgent;

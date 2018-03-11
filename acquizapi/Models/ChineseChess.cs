@@ -716,20 +716,30 @@ namespace acquizapi.Models
             this.Position = new List<int>();
         }
     }
+    public class ChineseChessAIInputPiece
+    {
+        public string Name { get; set; }
+        public List<Int32> Position { get; private set; }
+
+        public ChineseChessAIInputPiece()
+        {
+            this.Position = new List<int>();
+        }
+    }
     public class ChineseChessAIInputAgent
     {
         public Int16 Strategy { get; set; }
         public Int16 Depth { get; set; }
         public List<ChineseChessAIMove> PastMoves { get; private set; }
         public Int16 Team { get; set; }
-        public List<ChineseChessPiece> MyPieces { get; private set; }
+        public List<ChineseChessAIInputPiece> MyPieces { get; private set; }
         public List<Int32> Weights { get; set; }
         public List<Int32> FeatureMatrix { get; set; }
 
         public ChineseChessAIInputAgent()
         {
             PastMoves = new List<ChineseChessAIMove>();
-            MyPieces = new List<ChineseChessPiece>();
+            MyPieces = new List<ChineseChessAIInputPiece>();
         }
     }
 
