@@ -602,6 +602,11 @@ namespace acquizapi.Models
             MyPiecesDic = new Dictionary<string, ChineseChessPosition>();
         }
 
+        public Boolean IsKingExist()
+        {
+            return this.MyPieces.FindIndex(x => x.Name == "k") != -1;
+        }
+
         public void SetOppoAgent(ChineseChessAgent oppoAgent)
         {
             OppoAgent = oppoAgent;
@@ -677,6 +682,37 @@ namespace acquizapi.Models
                 OppoPieces.RemoveAt(idx);
             }
         }
+
+        public ChineseChessPiece ComputeNextMove(ChineseChessState state)
+        {
+            return null;
+        }
+    }
+
+    public class ChineseChessABPRuning: ChineseChessAgent
+    {
+        public Int32 Depth { get; set; }
+        public ChineseChessABPRuning(Int16 team, List<ChineseChessPiece> myPieces, Int32 depth)
+            : base(team, myPieces)
+        {
+            this.Depth = depth;
+        }
+    }
+
+    public class ChineseChessReorder: ChineseChessABPRuning
+    {
+        public ChineseChessReorder(Int16 team, List<ChineseChessPiece> myPieces, Int32 depth)
+            : base(team, myPieces, depth)
+        {
+        }
+    }
+
+    public class ChineseChessTDLearner: ChineseChessReorder
+    {
+        public ChineseChessTDLearner(Int16 team, List<ChineseChessPiece> myPieces, Int32 depth)
+            : base(team, myPieces, depth)
+        {
+        }
     }
 
     public enum ChineseChessStatusEnum
@@ -703,6 +739,24 @@ namespace acquizapi.Models
             var playing = PlayingTeam == 1 ? RedAgent : BlackAgent;
             return ChineseChessGame.GetGameEndStatus(playing);
         }
+
+        public ChineseChessPiece NextMove()
+        {
+            var agent = this.GetPlayingAgent();
+            
+            if (agent.IsKingExist())
+            {
+                return agent.ComputeNextMove(this);
+            }
+
+            return null;
+        }
+
+        public ChineseChessAgent GetPlayingAgent()
+        {
+            return this.PlayingTeam == 1 ? this.RedAgent : this.BlackAgent;
+        }
+
     }
 
     // Interface between webapp and webapi
