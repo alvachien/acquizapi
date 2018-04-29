@@ -33,9 +33,9 @@ namespace acquizapi.Models
     {
         public Int32 QuizID { get; set; }
         public Int32 QuizFailIndex { get; set; }
-        [StringLength(50)]
+        [StringLength(250)]
         public String Expected { get; set; }
-        [StringLength(50)]
+        [StringLength(250)]
         public String Inputted { get; set; }
     }
 
@@ -49,7 +49,7 @@ namespace acquizapi.Models
 
         public Int32 QuizID { get; set; }
         public QuizTypeEnum QuizType { get; set; }
-        [StringLength(50)]
+        [StringLength(250)]
         public String BasicInfo { get; set; }
         [StringLength(50)]
         public String AttendUser { get; set; }
@@ -202,6 +202,8 @@ namespace acquizapi.Models
         public DateTime ValidTo { get; set; }
         [Required]
         public QuizTypeEnum QuizType { get; set; }
+        [StringLength(250)]
+        public String QuizControl { get; set; }
         public Int32? MinQuizScore { get; set; }
         public Int32? MinQuizAvgTime { get; set; }
         [Required]

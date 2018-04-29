@@ -7,8 +7,8 @@ GO
 CREATE TABLE [dbo].[quizfaillog](
 	[quizid] [int] NOT NULL,
 	[failidx] [int] NOT NULL,
-	[expected] [nvarchar](50) NOT NULL,
-	[inputted] [nvarchar](50) NOT NULL,
+	[expected] [nvarchar](250) NOT NULL,
+	[inputted] [nvarchar](250) NOT NULL,
  CONSTRAINT [PK_quizfaillog] PRIMARY KEY CLUSTERED 
 (
 	[quizid] ASC,
@@ -25,7 +25,7 @@ GO
 CREATE TABLE [dbo].[quiz](
 	[quizid] [int] IDENTITY(1,1) NOT NULL,
 	[quiztype] [smallint] NOT NULL,
-	[basicinfo] [nvarchar] (50) NOT NULL,
+	[basicinfo] [nvarchar] (250) NOT NULL,
 	[attenduser] [nvarchar](50) NOT NULL,
 	[submitdate] [datetime] NOT NULL,
  CONSTRAINT [PK_quiz] PRIMARY KEY CLUSTERED 
@@ -200,6 +200,7 @@ CREATE TABLE [dbo].[awardplan](
 	[validfrom] [date] NOT NULL,
 	[validto] [date] NOT NULL,
 	[quiztype] [smallint] NOT NULL,
+	[quizcontrol] [nvarchar](250) NULL,
 	[minscore] [int] NULL,
 	[minavgtime] [int] NULL,
 	[award] [int] NOT NULL,

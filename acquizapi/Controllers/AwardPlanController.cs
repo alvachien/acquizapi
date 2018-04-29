@@ -28,7 +28,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [planid],[tgtuser],[createdby],[validfrom],[validto],[quiztype],[minscore],[minavgtime],[award] FROM [dbo].[awardplan] ";
+                String queryString = @"SELECT [planid],[tgtuser],[createdby],[validfrom],[validto],[quiztype],[quizcontrol],[minscore],[minavgtime],[award] FROM [dbo].[awardplan] ";
                 if (!String.IsNullOrEmpty(crtedby) && String.IsNullOrEmpty(tgtuser))
                 {
                     queryString += " WHERE [createdby] = N'" + crtedby + "'";
@@ -76,10 +76,12 @@ namespace acquizapi.Controllers
                         ap.ValidTo = reader.GetDateTime(4);
                         ap.QuizType = (QuizTypeEnum)reader.GetInt16(5);
                         if (!reader.IsDBNull(6))
-                            ap.MinQuizScore = reader.GetInt32(6);
+                            ap.QuizControl = reader.GetString(6);
                         if (!reader.IsDBNull(7))
-                            ap.MinQuizAvgTime = reader.GetInt32(7);
-                        ap.Award = reader.GetInt32(8);
+                            ap.MinQuizScore = reader.GetInt32(7);
+                        if (!reader.IsDBNull(8))
+                            ap.MinQuizAvgTime = reader.GetInt32(8);
+                        ap.Award = reader.GetInt32(9);
                         listRst.Add(ap);
                     }
                 }
@@ -122,7 +124,7 @@ namespace acquizapi.Controllers
             try
             {
                 await conn.OpenAsync();
-                String queryString = @"SELECT [planid],[tgtuser],[createdby],[validfrom],[validto],[quiztype],[minscore],[minavgtime],[award] FROM [dbo].[awardplan] WHERE [planid] = @pid;";
+                String queryString = @"SELECT [planid],[tgtuser],[createdby],[validfrom],[validto],[quiztype],[quizcontrol],[minscore],[minavgtime],[award] FROM [dbo].[awardplan] WHERE [planid] = @pid;";
 
                 SqlCommand cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@pid", id);
@@ -142,10 +144,12 @@ namespace acquizapi.Controllers
                         objRst.ValidTo = reader.GetDateTime(4);
                         objRst.QuizType = (QuizTypeEnum)reader.GetInt16(5);
                         if (!reader.IsDBNull(6))
-                            objRst.MinQuizScore = reader.GetInt32(6);
+                            objRst.QuizControl = reader.GetString(6);
                         if (!reader.IsDBNull(7))
-                            objRst.MinQuizAvgTime = reader.GetInt32(7);
-                        objRst.Award = reader.GetInt32(8);
+                            objRst.MinQuizScore = reader.GetInt32(7);
+                        if (!reader.IsDBNull(8))
+                            objRst.MinQuizAvgTime = reader.GetInt32(8);
+                        objRst.Award = reader.GetInt32(9);
                         break;
                     }
                 }
@@ -248,8 +252,8 @@ namespace acquizapi.Controllers
                     return BadRequest("No authority to create plan");
                 }
 
-                queryString = @"INSERT INTO [dbo].[awardplan] ([tgtuser],[createdby],[validfrom],[validto],[quiztype],[minscore],[minavgtime],[award])
-                    VALUES(@tgtuser, @createdby, @validfrom, @validto, @quiztype, @minscore, @minavgtime, @award);
+                queryString = @"INSERT INTO [dbo].[awardplan] ([tgtuser],[createdby],[validfrom],[validto],[quiztype],[quizcontrol],[minscore],[minavgtime],[award])
+                    VALUES(@tgtuser, @createdby, @validfrom, @validto, @quiztype, @quizcontrol, @minscore, @minavgtime, @award);
                     SELECT @Identity = SCOPE_IDENTITY();";
 
                 cmd = new SqlCommand(queryString, conn);
@@ -263,6 +267,10 @@ namespace acquizapi.Controllers
                 cmd.Parameters.AddWithValue("@validfrom", ap.ValidFrom);
                 cmd.Parameters.AddWithValue("@validto", ap.ValidTo);
                 cmd.Parameters.AddWithValue("@quiztype", ap.QuizType);
+                if (!String.IsNullOrEmpty(ap.QuizControl))
+                    cmd.Parameters.AddWithValue("@quizcontrol", ap.QuizControl);
+                else
+                    cmd.Parameters.AddWithValue("@quizcontrol", DBNull.Value);
                 if (ap.MinQuizScore.HasValue)
                     cmd.Parameters.AddWithValue("@minscore", ap.MinQuizScore.Value);
                 else
@@ -364,6 +372,7 @@ namespace acquizapi.Controllers
                       ,[validfrom] = @validfrom
                       ,[validto] = @validto
                       ,[quiztype] = @quiztype
+                      ,[quizcontrol] = @quizcontrol
                       ,[minscore] = @minscore
                       ,[minavgtime] = @minavgtime
                       ,[award] = @award
@@ -378,6 +387,10 @@ namespace acquizapi.Controllers
                 cmd.Parameters.AddWithValue("@validfrom", ap.ValidFrom);
                 cmd.Parameters.AddWithValue("@validto", ap.ValidTo);
                 cmd.Parameters.AddWithValue("@quiztype", ap.QuizType);
+                if (!String.IsNullOrEmpty(ap.QuizControl))
+                    cmd.Parameters.AddWithValue("@quizcontrol", ap.QuizControl);
+                else
+                    cmd.Parameters.AddWithValue("@quizcontrol", DBNull.Value);
                 if (ap.MinQuizScore.HasValue)
                     cmd.Parameters.AddWithValue("@minscore", ap.MinQuizScore.Value);
                 else
