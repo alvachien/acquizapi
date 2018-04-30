@@ -198,7 +198,7 @@ namespace acquizapi.Controllers
                 await conn.OpenAsync();
 
                 // Read the award plan as the first setp
-                queryString = @"SELECT [planid],[tgtuser],[createdby],[validfrom],[validto],[quiztype],[minscore],[minavgtime],[award] FROM [dbo].[awardplan] 
+                queryString = @"SELECT [planid],[tgtuser],[createdby],[validfrom],[validto],[quiztype],[quizcontrol], [minscore],[minavgtime],[award] FROM [dbo].[awardplan] 
                     WHERE [tgtuser] = @tgtuser AND [quiztype] = @qtype AND @qdate >= [validfrom] AND @qdate <= [validto] ";
                 cmd = new SqlCommand(queryString, conn);
                 cmd.Parameters.AddWithValue("@tgtuser", usrName);
@@ -222,10 +222,12 @@ namespace acquizapi.Controllers
                         ap.ValidTo = reader.GetDateTime(4);
                         ap.QuizType = (QuizTypeEnum)reader.GetInt16(5);
                         if (!reader.IsDBNull(6))
-                            ap.MinQuizScore = reader.GetInt32(6);
+                            ap.QuizControl = reader.GetString(6);
                         if (!reader.IsDBNull(7))
-                            ap.MinQuizAvgTime = reader.GetInt32(7);
-                        ap.Award = reader.GetInt32(8);
+                            ap.MinQuizScore = reader.GetInt32(7);
+                        if (!reader.IsDBNull(8))
+                            ap.MinQuizAvgTime = reader.GetInt32(8);
+                        ap.Award = reader.GetInt32(9);
                         listAPlans.Add(ap);
                     }
                 }
@@ -234,7 +236,7 @@ namespace acquizapi.Controllers
                 cmd.Dispose();
                 cmd = null;
 
-                tran = conn.BeginTransaction();                
+                tran = conn.BeginTransaction();
                 queryString = @"INSERT INTO [dbo].[quiz] ([quiztype],[basicinfo],[attenduser],[submitdate]) VALUES (@quiztype, @basicinfo, @attenduser, @submitdate); SELECT @Identity = SCOPE_IDENTITY();";
 
                 cmd = new SqlCommand(queryString, conn)
@@ -294,6 +296,14 @@ namespace acquizapi.Controllers
                 // Now, work for the award
                 foreach(AwardPlan ap in listAPlans)
                 {
+                    if (!String.IsNullOrEmpty(ap.QuizControl))
+                    {
+                        if (String.IsNullOrEmpty(qz.BasicInfo) || String.CompareOrdinal(qz.BasicInfo, ap.QuizControl) != 0)
+                        {
+                            continue;
+                        }
+                    }
+
                     if (ap.MinQuizScore.HasValue)
                     {
                         if (qz.TotalScore < ap.MinQuizScore.Value)
