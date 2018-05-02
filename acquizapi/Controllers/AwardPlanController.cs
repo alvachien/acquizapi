@@ -80,7 +80,7 @@ namespace acquizapi.Controllers
                         if (!reader.IsDBNull(7))
                             ap.MinQuizScore = reader.GetInt32(7);
                         if (!reader.IsDBNull(8))
-                            ap.MinQuizAvgTime = reader.GetInt32(8);
+                            ap.MaxQuizAvgTime = reader.GetInt32(8);
                         ap.Award = reader.GetInt32(9);
                         listRst.Add(ap);
                     }
@@ -148,7 +148,7 @@ namespace acquizapi.Controllers
                         if (!reader.IsDBNull(7))
                             objRst.MinQuizScore = reader.GetInt32(7);
                         if (!reader.IsDBNull(8))
-                            objRst.MinQuizAvgTime = reader.GetInt32(8);
+                            objRst.MaxQuizAvgTime = reader.GetInt32(8);
                         objRst.Award = reader.GetInt32(9);
                         break;
                     }
@@ -275,8 +275,8 @@ namespace acquizapi.Controllers
                     cmd.Parameters.AddWithValue("@minscore", ap.MinQuizScore.Value);
                 else
                     cmd.Parameters.AddWithValue("@minscore", DBNull.Value);
-                if (ap.MinQuizAvgTime.HasValue)
-                    cmd.Parameters.AddWithValue("@minavgtime", ap.MinQuizAvgTime.Value);
+                if (ap.MaxQuizAvgTime.HasValue)
+                    cmd.Parameters.AddWithValue("@minavgtime", ap.MaxQuizAvgTime.Value);
                 else
                     cmd.Parameters.AddWithValue("@minavgtime", DBNull.Value);
                 cmd.Parameters.AddWithValue("@award", ap.Award);
@@ -395,8 +395,8 @@ namespace acquizapi.Controllers
                     cmd.Parameters.AddWithValue("@minscore", ap.MinQuizScore.Value);
                 else
                     cmd.Parameters.AddWithValue("@minscore", DBNull.Value);
-                if (ap.MinQuizAvgTime.HasValue)
-                    cmd.Parameters.AddWithValue("@minavgtime", ap.MinQuizAvgTime.Value);
+                if (ap.MaxQuizAvgTime.HasValue)
+                    cmd.Parameters.AddWithValue("@minavgtime", ap.MaxQuizAvgTime.Value);
                 else
                     cmd.Parameters.AddWithValue("@minavgtime", DBNull.Value);
                 cmd.Parameters.AddWithValue("@award", ap.Award);

@@ -226,7 +226,7 @@ namespace acquizapi.Controllers
                         if (!reader.IsDBNull(7))
                             ap.MinQuizScore = reader.GetInt32(7);
                         if (!reader.IsDBNull(8))
-                            ap.MinQuizAvgTime = reader.GetInt32(8);
+                            ap.MaxQuizAvgTime = reader.GetInt32(8);
                         ap.Award = reader.GetInt32(9);
                         listAPlans.Add(ap);
                     }
@@ -309,9 +309,9 @@ namespace acquizapi.Controllers
                         if (qz.TotalScore < ap.MinQuizScore.Value)
                             continue;
                     }
-                    if (ap.MinQuizAvgTime.HasValue)
+                    if (ap.MaxQuizAvgTime.HasValue)
                     {
-                        if (qz.TotalAverageTime > ap.MinQuizAvgTime.Value)
+                        if (qz.TotalAverageTime > ap.MaxQuizAvgTime.Value)
                             continue;
                     }
 

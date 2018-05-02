@@ -205,7 +205,7 @@ namespace acquizapi.Models
         [StringLength(250)]
         public String QuizControl { get; set; }
         public Int32? MinQuizScore { get; set; }
-        public Int32? MinQuizAvgTime { get; set; }
+        public Int32? MaxQuizAvgTime { get; set; }
         [Required]
         public Int32 Award { get; set; }
     }
