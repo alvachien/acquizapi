@@ -8,6 +8,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using acquizapi.Models;
+using System.Net;
 
 namespace acquizapi.Controllers
 {
@@ -21,7 +22,6 @@ namespace acquizapi.Controllers
         public async Task<IActionResult> Get()
         {
             List<QuizAttendUser> listRst = new List<QuizAttendUser>();
-            Boolean bError = false;
             String strErrMsg = "";
 
             // Get user name
@@ -30,20 +30,26 @@ namespace acquizapi.Controllers
             if (usr != null)
                 usrName = usr.Value;
             else
-                bError = true;
+                return BadRequest("User cannot reconginze!");
 
-            if (!String.IsNullOrEmpty(usrName))
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
+
+            try
             {
-                SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
-                try
-                {
-                    await conn.OpenAsync();
-                    String queryString = @"SELECT c.[userid], b.displayas 
+                String queryString = @"SELECT c.[userid], b.displayas 
                         FROM [v_permuser] c JOIN [quizuser] b ON c.[userid] = b.[userid] 
                         UNION SELECT [userid], [displayas] FROM [quizuser] WHERE [userid] = @usr;";
-                    SqlCommand cmd = new SqlCommand(queryString, conn);
+
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
+
+                    cmd = new SqlCommand(queryString, conn);
                     cmd.Parameters.AddWithValue("@usr", usrName);
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    reader = cmd.ExecuteReader();
 
                     if (reader.HasRows)
                     {
@@ -71,26 +77,48 @@ namespace acquizapi.Controllers
                         listRst.Add(au);
                     }
                 }
-                catch (Exception exp)
+            }
+            catch(Exception exp)
+            {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine(exp.Message);
+#endif
+                strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
+            }
+            finally
+            {
+                if (reader != null)
                 {
-                    System.Diagnostics.Debug.WriteLine(exp.Message);
-                    bError = true;
-                    strErrMsg = exp.Message;
+                    reader.Dispose();
+                    reader = null;
                 }
-                finally
+                if (cmd != null)
                 {
-                    if (conn != null)
-                    {
-                        conn.Close();
-                        conn.Dispose();
-                        conn = null;
-                    }
+                    cmd.Dispose();
+                    cmd = null;
+                }
+                if (conn != null)
+                {
+                    conn.Dispose();
+                    conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return new JsonResult(listRst);

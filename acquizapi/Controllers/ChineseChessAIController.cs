@@ -20,7 +20,7 @@ namespace acquizapi.Controllers
         
         // PUT: api/ChineseChessAI/5
         [HttpPut]
-        public async Task<IActionResult> Put([FromBody]ChineseChessAIInput value)
+        public IActionResult Put([FromBody]ChineseChessAIInput value)
         {
             if (!ModelState.IsValid)
             {

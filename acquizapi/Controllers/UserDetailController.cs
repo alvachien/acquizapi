@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using acquizapi.Models;
 using System.Data.SqlClient;
+using System.Net;
 
 namespace acquizapi.Controllers
 {
@@ -20,61 +21,87 @@ namespace acquizapi.Controllers
         public async Task<IActionResult> Get()
         {
             List<UserDetail> listRst = new List<UserDetail>();
-            Boolean bError = false;
             String strErrMsg = "";
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
             {
-                await conn.OpenAsync();
                 String queryString = @"SELECT [userid], [displayas], [others],[award],[awardplan] FROM [quizuser] WHERE [deletionflag] != 1;";
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                SqlDataReader reader = cmd.ExecuteReader();
 
-                if (reader.HasRows)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    while (reader.Read())
+                    await conn.OpenAsync();
+                    cmd = new SqlCommand(queryString, conn);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
                     {
-                        UserDetail ud = new UserDetail
+                        while (reader.Read())
                         {
-                            UserID = reader.GetString(0),
-                            DisplayAs = reader.GetString(1)
-                        };
-                        if (reader.IsDBNull(2))
-                            ud.Others = null;
-                        else
-                            ud.Others = reader.GetString(2);
-                        if (reader.IsDBNull(3))
-                            ud.AwardControl = null;
-                        else
-                            ud.AwardControl = reader.GetString(3);
-                        if (reader.IsDBNull(4))
-                            ud.AwardPlanControl = null;
-                        else
-                            ud.AwardPlanControl = reader.GetString(4);
-                        listRst.Add(ud);
+                            UserDetail ud = new UserDetail
+                            {
+                                UserID = reader.GetString(0),
+                                DisplayAs = reader.GetString(1)
+                            };
+                            if (reader.IsDBNull(2))
+                                ud.Others = null;
+                            else
+                                ud.Others = reader.GetString(2);
+                            if (reader.IsDBNull(3))
+                                ud.AwardControl = null;
+                            else
+                                ud.AwardControl = reader.GetString(3);
+                            if (reader.IsDBNull(4))
+                                ud.AwardPlanControl = null;
+                            else
+                                ud.AwardPlanControl = reader.GetString(4);
+                            listRst.Add(ud);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return new JsonResult(listRst);
@@ -85,63 +112,89 @@ namespace acquizapi.Controllers
         public async Task<IActionResult> Get(string id)
         {
             UserDetail objRst = null;
-            Boolean bError = false;
             String strErrMsg = "";
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
             {
-                await conn.OpenAsync();
-
                 String queryString = @"SELECT [userid], [displayas], [others],[award],[awardplan] FROM [quizuser] WHERE [userid] = @id;";
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                SqlDataReader reader = cmd.ExecuteReader();
 
-                if (reader.HasRows)
+                using (conn = new SqlConnection(Startup.DBConnectionString))
                 {
-                    while (reader.Read())
+                    await conn.OpenAsync();
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@id", id);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
                     {
-                        objRst = new UserDetail
+                        while (reader.Read())
                         {
-                            UserID = reader.GetString(0),
-                            DisplayAs = reader.GetString(1)
-                        };
-                        if (reader.IsDBNull(2))
-                            objRst.Others = null;
-                        else
-                            objRst.Others = reader.GetString(2);
-                        if (reader.IsDBNull(3))
-                            objRst.AwardControl = null;
-                        else
-                            objRst.AwardControl = reader.GetString(3);
-                        if (reader.IsDBNull(4))
-                            objRst.AwardPlanControl = null;
-                        else
-                            objRst.AwardPlanControl = reader.GetString(4);
-                        break;
+                            objRst = new UserDetail
+                            {
+                                UserID = reader.GetString(0),
+                                DisplayAs = reader.GetString(1)
+                            };
+                            if (reader.IsDBNull(2))
+                                objRst.Others = null;
+                            else
+                                objRst.Others = reader.GetString(2);
+                            if (reader.IsDBNull(3))
+                                objRst.AwardControl = null;
+                            else
+                                objRst.AwardControl = reader.GetString(3);
+                            if (reader.IsDBNull(4))
+                                objRst.AwardPlanControl = null;
+                            else
+                                objRst.AwardPlanControl = reader.GetString(4);
+                            break;
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             if (objRst == null)
@@ -160,10 +213,12 @@ namespace acquizapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             // Get user name
             var usr = User.FindFirst(c => c.Type == "sub");
@@ -173,48 +228,72 @@ namespace acquizapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
                 queryString = @"INSERT INTO [quizuser] ([userid],[displayas],[others],[award],[awardplan]) VALUES (@userid, @displayas, @others, @award, @awardplan)";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@userid", ud.UserID);
-                cmd.Parameters.AddWithValue("@displayas", ud.DisplayAs);
-                if (String.IsNullOrEmpty(ud.Others))
-                    cmd.Parameters.AddWithValue("@others", DBNull.Value);
-                else
-                    cmd.Parameters.AddWithValue("@others", ud.Others);
-                if (String.IsNullOrEmpty(ud.AwardControl))
-                    cmd.Parameters.AddWithValue("@award", DBNull.Value);
-                else
-                    cmd.Parameters.AddWithValue("@award", ud.AwardControl);
-                if (String.IsNullOrEmpty(ud.AwardPlanControl))
-                    cmd.Parameters.AddWithValue("@awardplan", DBNull.Value);
-                else
-                    cmd.Parameters.AddWithValue("@awardplan", ud.AwardControl);
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();                    
 
-                Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                cmd.Dispose();
-                cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@userid", ud.UserID);
+                    cmd.Parameters.AddWithValue("@displayas", ud.DisplayAs);
+                    if (String.IsNullOrEmpty(ud.Others))
+                        cmd.Parameters.AddWithValue("@others", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@others", ud.Others);
+                    if (String.IsNullOrEmpty(ud.AwardControl))
+                        cmd.Parameters.AddWithValue("@award", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@award", ud.AwardControl);
+                    if (String.IsNullOrEmpty(ud.AwardPlanControl))
+                        cmd.Parameters.AddWithValue("@awardplan", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@awardplan", ud.AwardControl);
+
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+                }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return new JsonResult(ud);
@@ -230,10 +309,11 @@ namespace acquizapi.Controllers
             }
 
             // Update the database
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
             String queryString = "";
-            Boolean bError = false;
             String strErrMsg = "";
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             // Get user name
             var usr = User.FindFirst(c => c.Type == "sub");
@@ -243,49 +323,68 @@ namespace acquizapi.Controllers
 
             try
             {
-                await conn.OpenAsync();
                 queryString = @"UPDATE [dbo].[quizuser] SET [displayas] = @displayas, [others] = @others, 
                                         [award] = @award, [awardplan] = @awardplan WHERE [userid] = @userid;";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@displayas", ud.DisplayAs);
-                if (String.IsNullOrEmpty(ud.Others))
-                    cmd.Parameters.AddWithValue("@others", DBNull.Value);
-                else
-                    cmd.Parameters.AddWithValue("@others", ud.Others);
-                if (String.IsNullOrEmpty(ud.AwardControl))
-                    cmd.Parameters.AddWithValue("@award", DBNull.Value);
-                else
-                    cmd.Parameters.AddWithValue("@award", ud.AwardControl);
-                if (String.IsNullOrEmpty(ud.AwardPlanControl))
-                    cmd.Parameters.AddWithValue("@awardplan", DBNull.Value);
-                else
-                    cmd.Parameters.AddWithValue("@awardplan", ud.AwardControl);
-                cmd.Parameters.AddWithValue("@userid", ud.UserID);
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                Int32 nRst = await cmd.ExecuteNonQueryAsync();
-                cmd.Dispose();
-                cmd = null;
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@displayas", ud.DisplayAs);
+                    if (String.IsNullOrEmpty(ud.Others))
+                        cmd.Parameters.AddWithValue("@others", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@others", ud.Others);
+                    if (String.IsNullOrEmpty(ud.AwardControl))
+                        cmd.Parameters.AddWithValue("@award", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@award", ud.AwardControl);
+                    if (String.IsNullOrEmpty(ud.AwardPlanControl))
+                        cmd.Parameters.AddWithValue("@awardplan", DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@awardplan", ud.AwardControl);
+                    cmd.Parameters.AddWithValue("@userid", ud.UserID);
+
+                    Int32 nRst = await cmd.ExecuteNonQueryAsync();
+                    cmd.Dispose();
+                    cmd = null;
+                }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             return new JsonResult(ud);
@@ -293,7 +392,7 @@ namespace acquizapi.Controllers
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             // Todo
             return BadRequest();

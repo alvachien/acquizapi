@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using acquizapi.Models;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using System.Net;
 
 namespace acquizapi.Controllers
 {
@@ -23,15 +24,14 @@ namespace acquizapi.Controllers
                 return BadRequest("User is must!");
 
             List<QuizSucceedRateStatistics> listRst = new List<QuizSucceedRateStatistics>();
-
-            Boolean bError = false;
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
             String strErrMsg = "";
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
             {
-                await conn.OpenAsync();
-
                 String queryString = @"SELECT quiz.quizid, quiz.quiztype, quiz.attenduser,                     
                     SUM(quizsection.totalitems) as totalitems,
 	                SUM(quizsection.faileditems) as faileditems
@@ -44,35 +44,60 @@ namespace acquizapi.Controllers
                     queryString += " AND [quiz].[submitdate] <= @enddate ";
                 queryString += @" GROUP BY quiz.quizid, quiz.quiztype, quiz.attenduser;";
 
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@user", usrid);
-                if (dtBegin.HasValue)
-                    cmd.Parameters.AddWithValue("@begindate", dtBegin.Value);
-                if (dtEnd.HasValue)
-                    cmd.Parameters.AddWithValue("@enddate", dtEnd.Value);
-                SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                using (conn = new SqlConnection(Startup.DBConnectionString))
+                {
+                    await conn.OpenAsync();
 
-                this.GetDBResult(reader, listRst);
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@user", usrid);
+                    if (dtBegin.HasValue)
+                        cmd.Parameters.AddWithValue("@begindate", dtBegin.Value);
+                    if (dtEnd.HasValue)
+                        cmd.Parameters.AddWithValue("@enddate", dtEnd.Value);
+                    reader = await cmd.ExecuteReaderAsync();
+
+                    this.GetDBResult(reader, listRst);
+                }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
@@ -84,11 +109,39 @@ namespace acquizapi.Controllers
             return new JsonResult(listRst, setting);
         }
 
+        // GET: api/StatisticQuizRate/5
+        [HttpGet("{id}")]
+        public IActionResult Get(int id)
+        {
+            return BadRequest("UnSupported");
+        }
+
+        // POST: api/StatisticQuizRate
+        [HttpPost]
+        public IActionResult Post([FromBody]string value)
+        {
+            return BadRequest("UnSupported");
+        }
+
+        // PUT: api/StatisticQuizRate/5
+        [HttpPut("{id}")]
+        public IActionResult Put(int id, [FromBody]string value)
+        {
+            return BadRequest("UnSupported");
+        }
+
+        // DELETE: api/ApiWithActions/5
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            return BadRequest("UnSupported");
+        }
+
         private void GetDBResult(SqlDataReader reader, List<QuizSucceedRateStatistics> listRst)
         {
             if (reader.HasRows)
             {
-                while(reader.Read())
+                while (reader.Read())
                 {
                     QuizSucceedRateStatistics row = new QuizSucceedRateStatistics();
                     row.QuizID = reader.GetInt32(0);
@@ -99,39 +152,11 @@ namespace acquizapi.Controllers
                     var failedItems = reader.GetInt32(4);
                     if (totalItems == 0)
                         row.SucceedRate = 100;
-                    else 
+                    else
                         row.SucceedRate = 100 * (totalItems - failedItems) / totalItems;
                     listRst.Add(row);
                 }
             }
-        }
-
-        // GET: api/StatisticQuizRate/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
-        {
-            return BadRequest("UnSupported");
-        }
-
-        // POST: api/StatisticQuizRate
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody]string value)
-        {
-            return BadRequest("UnSupported");
-        }
-
-        // PUT: api/StatisticQuizRate/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]string value)
-        {
-            return BadRequest("UnSupported");
-        }
-
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            return BadRequest("UnSupported");
         }
     }
 }

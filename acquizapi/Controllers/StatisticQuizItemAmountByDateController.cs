@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using acquizapi.Models;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using System.Net;
 
 namespace acquizapi.Controllers
 {
@@ -17,7 +18,7 @@ namespace acquizapi.Controllers
     {
         // GET: api/StatisticQuizItemAmountByDate
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public IActionResult Get()
         {
             return BadRequest();
         }
@@ -27,8 +28,11 @@ namespace acquizapi.Controllers
         public async Task<IActionResult> Get(string usr)
         {
             List<QuizItemAmountByDateStatistics> listRst = new List<QuizItemAmountByDateStatistics>();
-            Boolean bError = false;
             String strErrMsg = "";
+            SqlConnection conn = null;
+            SqlCommand cmd = null;
+            SqlDataReader reader = null;
+            HttpStatusCode errorCode = HttpStatusCode.OK;
 
             // Get user name
             String usrName = String.Empty;
@@ -37,60 +41,83 @@ namespace acquizapi.Controllers
                 var usro = User.FindFirst(c => c.Type == "sub");
                 if (usr != null)
                     usrName = usro.Value;
+                else
+                    return BadRequest("User cannot recognize");
             }
             else
-            {
                 usrName = usr;
-            }
 
-            SqlConnection conn = new SqlConnection(Startup.DBConnectionString);
             try
             {
-                await conn.OpenAsync();
                 String queryString = @"SELECT [submitdate]
                                   ,[attenduser]
                                   ,[totalitems]
                                   ,[faileditems]
                               FROM [v_quizitemamountbydate]
                               WHERE [attenduser] = @user";
-                SqlCommand cmd = new SqlCommand(queryString, conn);
-                cmd.Parameters.AddWithValue("@user", usrName);
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows)
+                using (conn = new SqlConnection(Startup.DBConnectionString)) 
                 {
-                    while (reader.Read())
+                    await conn.OpenAsync();
+
+                    cmd = new SqlCommand(queryString, conn);
+                    cmd.Parameters.AddWithValue("@user", usrName);
+                    reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
                     {
-                        QuizItemAmountByDateStatistics qz = new QuizItemAmountByDateStatistics
+                        while (reader.Read())
                         {
-                            QuizDate = reader.GetDateTime(0),
-                            AttendUser = reader.GetString(1),
-                            TotalAmount = reader.GetInt32(2),
-                            FailedAmount = reader.GetInt32(3)
-                        };
-                        listRst.Add(qz);
+                            QuizItemAmountByDateStatistics qz = new QuizItemAmountByDateStatistics
+                            {
+                                QuizDate = reader.GetDateTime(0),
+                                AttendUser = reader.GetString(1),
+                                TotalAmount = reader.GetInt32(2),
+                                FailedAmount = reader.GetInt32(3)
+                            };
+                            listRst.Add(qz);
+                        }
                     }
                 }
             }
             catch (Exception exp)
             {
                 System.Diagnostics.Debug.WriteLine(exp.Message);
-                bError = true;
                 strErrMsg = exp.Message;
+                if (errorCode == HttpStatusCode.OK)
+                    errorCode = HttpStatusCode.InternalServerError;
             }
             finally
             {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                    reader = null;
+                }
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                    cmd = null;
+                }
                 if (conn != null)
                 {
-                    conn.Close();
                     conn.Dispose();
                     conn = null;
                 }
             }
 
-            if (bError)
+            if (errorCode != HttpStatusCode.OK)
             {
-                return StatusCode(500, strErrMsg);
+                switch (errorCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        return Unauthorized();
+                    case HttpStatusCode.NotFound:
+                        return NotFound();
+                    case HttpStatusCode.BadRequest:
+                        return BadRequest();
+                    default:
+                        return StatusCode(500, strErrMsg);
+                }
             }
 
             var setting = new Newtonsoft.Json.JsonSerializerSettings
