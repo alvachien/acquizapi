@@ -3,6 +3,25 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
+    <Configurations>Debug;Release;AliyunRelease;AzureRelease</Configurations>
+    <Version>1.2.0</Version>
+    <Authors>Alva Chien</Authors>
+    <Product>Math Exerience</Product>
+    <Copyright>(C) Copyright by Alva Chien, 2016 - 2018</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AliyunRelease|AnyCPU'">
+    <DefineConstants>TRACE;USE_ALIYUN;RELEASE;</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AzureRelease|AnyCPU'">
+    <DefineConstants>TRACE;USE_AZURE;RELEASE;</DefineConstants>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>

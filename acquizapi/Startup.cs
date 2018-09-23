@@ -1,15 +1,4 @@
-﻿
-#if RELEASE
-//#define USE_AZURE
-#define USE_ALIYUN
-#undef USE_AZURE
-#else
-#define DEBUG
-#undef USE_ALIYUN
-#undef USE_AZURE
-#endif
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,8 +6,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace acquizapi
 {
@@ -47,7 +34,8 @@ namespace acquizapi
                 {
 #if DEBUG
                     options.Authority = "http://localhost:41016";
-#else
+#endif
+#if RELEASE
 #if USE_AZURE
                     options.Authority = "http://acidserver.azurewebsites.net";
 #elif USE_ALIYUN
@@ -61,12 +49,13 @@ namespace acquizapi
                 });
 
 #if DEBUG
-            DBConnectionString = Configuration["ConnectionStrings:DebugConnection"];
-#else
+            DBConnectionString = Configuration.GetConnectionString("DebugConnection");
+#endif
+#if RELEASE
 #if USE_ALIYUN
-            DBConnectionString = Configuration["ConnectionStrings:AliyunConnection"];
+            DBConnectionString = Configuration.GetConnectionString("AliyunConnection");
 #elif USE_AZURE
-            DBConnectionString = Configuration["ConnectionStrings:AzureConnection"];
+            DBConnectionString = Configuration.GetConnectionString("AzureConnection");
 #endif
 #endif
         }
@@ -81,8 +70,9 @@ namespace acquizapi
                     "http://localhost:20000", // AC math exercies
                     "https://localhost:20000"
                     )
-#else
-#if USE_MICROSOFTAZURE
+#endif
+#if RELEASE
+#if USE_AZURE
                 builder.WithOrigins(
                     "http://acmathexercise.azurewebsites.net",
                     "https://acmathexercise.azurewebsites.net"
