@@ -11,11 +11,13 @@ namespace acquizapi
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment env, IConfiguration config)
         {
-            Configuration = configuration;
+            HostingEnvironment = env;
+            Configuration = config;
         }
 
+        public IHostingEnvironment HostingEnvironment { get; }
         public IConfiguration Configuration { get; }
         internal static String DBConnectionString { get; private set; }
 
@@ -58,6 +60,11 @@ namespace acquizapi
             DBConnectionString = Configuration.GetConnectionString("AzureConnection");
 #endif
 #endif
+
+            // Response Caching
+            services.AddResponseCaching();
+            // Memory cache
+            services.AddMemoryCache();
         }
 
         public void Configure(IApplicationBuilder app)
@@ -90,6 +97,8 @@ namespace acquizapi
                 );
 
             app.UseMvc();
+
+            app.UseResponseCaching();
         }
     }
 }
